@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Light/Dark Mode Toggle</title>
+  <style>
+    body {
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #C8E9E9;   /* Light background */
+      color: #000000;        /* Light text */
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .meta {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    /* Dark mode styles */
+    body.dark {
+      background: #0E51B5;
+      color: #e5e7eb;
+    }
+    body.dark .meta {
+      color: #DADADA;
+    }
+
+    #theme-toggle {
+      margin-top: 2rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 1rem;
+    }
+
+   	ul {
+	  list-style-type: none;
+	  margin: 0;
+	  padding: 0;
+	  width: 25%;
+	  background-color: #C8E9E9;
+	  position: fixed;
+	  height: 100%;
+	  overflow: auto;
+	}
+
+	li a {
+	  display: block;
+	  color: #000;
+	  padding: 8px 16px;
+	  text-decoration: none;
+	}
+
+	li a.active {
+	  background-color: #04AA6D;
+	  color: white;
+	}
+
+	li a:hover:not(.active) {
+	  background-color: #555;
+	  color: white;
+	}
+
+	.page-content {
+		margin-left: 25%;
+		padding: 1rem;
+	}
+
+	body.dark .nav{
+		background-color: #0E51B5;
+	}
+
+  </style>
+</head>
+<body>
+	<ul>
+	  <li><a class="active" href="#home">Home</a></li>
+	  <li><a href="#news">News</a></li>
+	  <li><a href="#contact">Contact</a></li>
+	  <li><a href="#about">About</a></li>
+	</ul>
+	<div class="page-content">
+	  	<h1>Hello, Light/Dark Mode!</h1>
+	  	<p>This starts in light mode. Click the button to switch to dark mode.</p>
+	  	<p class="meta">Meta text example</p>
+
+	  	<button id="theme-toggle">Toggle Dark Mode</button>
+  	</div>
+
+  	
+  <script>
+    const btn = document.getElementById("theme-toggle");
+
+    btn.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+
+      // Update button text for clarity
+      if (document.body.classList.contains("dark")) {
+        btn.textContent = "Switch to Light Mode";
+      } else {
+        btn.textContent = "Switch to Dark Mode";
+      }
+    });
+  </script>
+</body>
+</html>
