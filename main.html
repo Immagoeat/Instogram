@@ -1,116 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Light/Dark Mode Toggle</title>
+  <meta charset="utf-8">
+  <title>3D FPS Prototype</title>
   <style>
-    body {
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      padding: 2rem;
-      background: #C8E9E9;   /* Light background */
-      color: #000000;        /* Light text */
-      transition: background 0.3s ease, color 0.3s ease;
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+    #hud {
+      position: fixed; top:10px; left:10px; color:white;
+      font-family:sans-serif; font-size:16px; background:rgba(0,0,0,0.5); padding:5px;
     }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    .meta {
-      font-size: 0.9rem;
-      color: #6b7280;
-    }
-
-    /* Dark mode styles */
-    body.dark {
-      background: #0E51B5;
-      color: #e5e7eb;
-    }
-    body.dark .meta {
-      color: #DADADA;
-    }
-
-    #theme-toggle {
-      margin-top: 2rem;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #2563eb;
-      color: #ffffff;
-      font-size: 1rem;
-    }
-
-   	ul {
-	  list-style-type: none;
-	  margin: 0;
-	  padding: 0;
-	  width: 25%;
-	  background-color: #C8E9E9;
-	  position: fixed;
-	  height: 100%;
-	  overflow: auto;
-	}
-
-	li a {
-	  display: block;
-	  color: #000;
-	  padding: 8px 16px;
-	  text-decoration: none;
-	}
-
-	li a.active {
-	  background-color: #04AA6D;
-	  color: white;
-	}
-
-	li a:hover:not(.active) {
-	  background-color: #555;
-	  color: white;
-	}
-
-	.page-content {
-		margin-left: 25%;
-		padding: 1rem;
-	}
-
-	body.dark .nav{
-		background-color: #0E51B5;
-	}
-
   </style>
 </head>
 <body>
-	<ul>
-	  <li><a class="active" href="#home">Home</a></li>
-	  <li><a href="#news">News</a></li>
-	  <li><a href="#contact">Contact</a></li>
-	  <li><a href="#about">About</a></li>
-	</ul>
-	<div class="page-content">
-	  	<h1>Hello, Light/Dark Mode!</h1>
-	  	<p>This starts in light mode. Click the button to switch to dark mode.</p>
-	  	<p class="meta">Meta text example</p>
+<div id="hud">Health: <span id="hp">10</span></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-	  	<button id="theme-toggle">Toggle Dark Mode</button>
-  	</div>
+// Ground
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(100, 100),
+  new THREE.MeshPhongMaterial({ color: 0x228B22 })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
 
-  	
-  <script>
-    const btn = document.getElementById("theme-toggle");
+// Light
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 20, 10);
+scene.add(light);
 
-    btn.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
+// Player
+const player = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshPhongMaterial({ color: 0x0000ff })
+);
+player.position.y = 0.5;
+player.health = 10;
+scene.add(player);
 
-      
-      if (document.body.classList.contains("dark")) {
-        btn.textContent = "Switch to Light Mode";
-      } else {
-        btn.textContent = "Switch to Dark Mode";
+// Bullets & Enemies
+let bullets = [];
+let enemies = [];
+function spawnEnemy(x, z) {
+  const enemy = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({ color: 0xff0000 })
+  );
+  enemy.position.set(x, 0.5, z);
+  enemy.health = 3;
+  scene.add(enemy);
+  enemies.push(enemy);
+}
+spawnEnemy(5, 5);
+spawnEnemy(-6, -5);
+
+// Controls
+const keys = {};
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
+
+// Pointer lock and mouse look
+let yaw = 0, pitch = 0;
+document.body.addEventListener("click", () => {
+  document.body.requestPointerLock();
+});
+document.addEventListener("mousemove", e => {
+  if (document.pointerLockElement === document.body) {
+    yaw -= e.movementX * 0.002;        // horizontal look stays the same
+    pitch += e.movementY * 0.002;      // change '-' to '+' to un-invert
+    pitch = Math.max(-Math.PI/3, Math.min(Math.PI/3, pitch)); // limit vertical rotation
+  }
+});
+
+// Shooting
+document.addEventListener("mousedown", e => {
+  if (e.button === 0) {
+    const bullet = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 0.2, 0.2),
+      new THREE.MeshPhongMaterial({ color: 0xffff00 })
+    );
+    bullet.position.copy(player.position);
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    bullet.dir = dir.multiplyScalar(0.5);
+    bullet.damage = 1;
+    bullets.push(bullet);
+    scene.add(bullet);
+  }
+});
+
+// Game loop
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Player movement (relative to camera yaw)
+  const speed = 0.1;
+  const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+  const right = new THREE.Vector3(forward.z, 0, -forward.x);
+
+  if (keys["w"] || keys["ArrowUp"]) player.position.add(forward.clone().multiplyScalar(-speed));
+  if (keys["s"] || keys["ArrowDown"]) player.position.add(forward.clone().multiplyScalar(speed));
+  if (keys["a"] || keys["ArrowLeft"]) player.position.add(right.clone().multiplyScalar(-speed));
+  if (keys["d"] || keys["ArrowRight"]) player.position.add(right.clone().multiplyScalar(speed));
+
+  // Camera follows player and applies yaw/pitch
+  camera.position.set(player.position.x, player.position.y + 1.5, player.position.z);
+  camera.rotation.set(pitch, yaw, 0);
+
+  // Bullets move & hit enemies
+  bullets.forEach((b, i) => {
+    b.position.add(b.dir);
+    if (Math.abs(b.position.x) > 50 || Math.abs(b.position.z) > 50) {
+      scene.remove(b); bullets.splice(i, 1);
+    } else {
+      enemies.forEach((e, j) => {
+        if (b.position.distanceTo(e.position) < 0.6) {
+          e.health -= b.damage;
+          scene.remove(b); bullets.splice(i, 1);
+          if (e.health <= 0) { scene.remove(e); enemies.splice(j, 1); }
+        }
+      });
+    }
+  });
+
+  // Enemy AI & damage
+  enemies.forEach(e => {
+    const dir = new THREE.Vector3().subVectors(player.position, e.position).normalize().multiplyScalar(0.02);
+    e.position.add(dir);
+    if (e.position.distanceTo(player.position) < 0.8) {
+      player.health -= 0.02;
+      if (player.health <= 0) {
+        player.health = 0;
+        document.getElementById("hp").innerText = player.health.toFixed(0);
+        alert("You died! Refresh to restart.");
       }
-    });
-  </script>
+    }
+  });
+
+  document.getElementById("hp").innerText = player.health.toFixed(0);
+
+  renderer.render(scene, camera);
+}
+
+animate();
+</script>
 </body>
 </html>
