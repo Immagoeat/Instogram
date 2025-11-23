@@ -1,12 +1,12 @@
-﻿using TwaterDependencies;
+﻿using InstogramDependencies;
 using System;
 
-namespace twater
+namespace Instogram
 {
     
     class Program
     {
-        public static void Main()
+        public static void Main(string[] args)
         {
             TD.Print("Hello, World!");
         }
