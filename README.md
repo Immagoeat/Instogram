@@ -1,2 +1,2 @@
-# twater
+# Instorgram
 Social media app
