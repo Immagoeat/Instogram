@@ -2,7 +2,7 @@ using System;
 
 namespace InstogramDependencies
 {
-    class TD
+    class ID
     {
         public static void Print(string item)
         {

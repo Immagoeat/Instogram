@@ -8,7 +8,15 @@ namespace Instogram
     {
         public static void Main(string[] args)
         {
-            TD.Print("Hello, World!");
+            ID.Print("Hello, World!");
+        }
+    }
+
+    class SendMessage
+    {
+        public static void Send(string message)
+        {
+            
         }
     }
 
