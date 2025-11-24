@@ -8,7 +8,7 @@ namespace Instogram
     {
         public static void Main(string[] args)
         {
-            ID.Print("Hello, World!");
+            ID.Print("Hi");
         }
     }
 
