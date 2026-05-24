@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.DMUserSearchView">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Background="#111111" Padding="16,12"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Click="OnBack" Classes="ghostBtn" Content="←" FontSize="18"/>
+        <TextBlock Text="New Message" Foreground="{DynamicResource AppTextBrush}" FontSize="18"
+                   FontWeight="Bold" VerticalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Search bar -->
+    <Border Grid.Row="1" Padding="16,12" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0" Text="{Binding Query}"
+                 PlaceholderText="Search by username or name…"
+                 Classes="searchInput"/>
+        <Button Grid.Column="1" Click="OnSearch" Classes="searchBtn"
+                Content="Search" Margin="10,0,0,0"/>
+      </Grid>
+    </Border>
+
+    <!-- Results -->
+    <ScrollViewer Grid.Row="2" Padding="0,8">
+      <StackPanel>
+        <TextBlock Text="No users found." Foreground="#555555" FontSize="14"
+                   HorizontalAlignment="Center" Margin="0,32"
+                   IsVisible="{Binding NoResults}"/>
+        <ItemsControl ItemsSource="{Binding Results}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Click="OnStartConversation" Tag="{Binding}"
+                      Classes="userRow" HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Stretch">
+                <Grid ColumnDefinitions="52,*">
+                  <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                          Background="#8b5cf6" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Username[0]}" Foreground="{DynamicResource AppTextBrush}"
+                               FontWeight="Bold" FontSize="16"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0" Spacing="2">
+                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource AppTextBrush}"
+                               FontWeight="SemiBold" FontSize="14"/>
+                    <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
+                               Foreground="#777777" FontSize="12"/>
+                  </StackPanel>
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.ghostBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#aaaaaa"/>
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="TextBox.searchInput">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    <Style Selector="Button.searchBtn">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="14,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.userRow">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="16,10"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.userRow:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#161616"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

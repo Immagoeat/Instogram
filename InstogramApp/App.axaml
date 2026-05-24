@@ -1,0 +1,51 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:InstogramApp"
+             x:Class="InstogramApp.App"
+             RequestedThemeVariant="Dark">
+
+  <Application.DataTemplates>
+    <local:ViewLocator/>
+  </Application.DataTemplates>
+
+  <Application.Styles>
+    <FluentTheme/>
+
+    <!-- Global theme-aware styles — driven by DynamicResource, update on theme switch -->
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource AppBgBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+    </Style>
+    <Style Selector="UserControl">
+      <Setter Property="Background" Value="{DynamicResource AppBgBrush}"/>
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="CaretBrush"  Value="{DynamicResource AppTextBrush}"/>
+    </Style>
+    <!-- Fix FluentTheme watermark/hover/focus background flicker -->
+    <Style Selector="TextBox:watermark /template/ TextBlock">
+      <Setter Property="Foreground" Value="#666666"/>
+    </Style>
+    <Style Selector="TextBox:watermark">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox:pointerover">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox:focus">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox:focus:watermark /template/ TextBlock">
+      <Setter Property="Foreground" Value="#666666"/>
+    </Style>
+    <Style Selector="ScrollViewer">
+      <Setter Property="Background" Value="{DynamicResource AppBgBrush}"/>
+    </Style>
+  </Application.Styles>
+</Application>

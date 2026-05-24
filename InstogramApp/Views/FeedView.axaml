@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.FeedView">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- Top bar -->
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="24,14"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding FeedTitle}"
+                   Foreground="{DynamicResource AppTextBrush}" FontSize="20" FontWeight="Bold"
+                   VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+          <Button Click="ShowFollowing"   Content="Following" Classes="tabBtn"/>
+          <Button Click="ShowRecommended" Content="For You"   Classes="tabBtn"/>
+          <Button Click="DoRefresh" Content="↻" Classes="tabBtn"
+                  ToolTip.Tip="Refresh" Width="36" Padding="0"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Story strip -->
+    <Border Grid.Row="1" Background="{DynamicResource AppSurfaceBrush}" Padding="20,14"
+            BorderBrush="#1a1a1a" BorderThickness="0,0,0,1">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Horizontal" Spacing="16">
+
+          <!-- Add your story -->
+          <Button Click="OnNewStory" Classes="storyAddBtn">
+            <StackPanel Spacing="6" HorizontalAlignment="Center">
+              <Border Width="54" Height="54" CornerRadius="27"
+                      Background="{DynamicResource AppInputBrush}" BorderBrush="#8b5cf6" BorderThickness="2">
+                <TextBlock Text="＋" Foreground="#8b5cf6" FontSize="22" FontWeight="Bold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <TextBlock Text="Your story" Foreground="#666666"
+                         FontSize="11" HorizontalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <!-- Story bubbles -->
+          <ItemsControl ItemsSource="{Binding StoryStrip.Bubbles}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="16"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button Click="OnOpenStory" Tag="{Binding}" Classes="storyAddBtn">
+                  <StackPanel Spacing="6" HorizontalAlignment="Center">
+                    <!-- Unseen ring -->
+                    <Border Width="58" Height="58" CornerRadius="29"
+                            Background="{Binding AccentColor}"
+                            IsVisible="{Binding HasUnseen}">
+                      <Border Width="50" Height="50" CornerRadius="25"
+                              Background="{DynamicResource AppSurfaceBrush}" HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
+                        <Border Width="46" Height="46" CornerRadius="23"
+                                Background="{Binding AccentColor}">
+                          <TextBlock Text="{Binding Initial}" Foreground="{DynamicResource AppTextBrush}"
+                                     FontWeight="Bold" FontSize="19"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                      </Border>
+                    </Border>
+                    <!-- Seen (no ring) -->
+                    <Border Width="54" Height="54" CornerRadius="27"
+                            Background="{DynamicResource AppInputBrush}"
+                            IsVisible="{Binding HasUnseen,
+                            Converter={x:Static BoolConverters.Not}}">
+                      <TextBlock Text="{Binding Initial}" Foreground="#888888"
+                                 FontWeight="Bold" FontSize="20"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="{Binding Author.Username}"
+                               Foreground="#888888" FontSize="11"
+                               HorizontalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" MaxWidth="60"/>
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+
+    <!-- Posts -->
+    <ScrollViewer Grid.Row="2" Padding="28,20">
+      <StackPanel MaxWidth="680" HorizontalAlignment="Center">
+        <TextBlock Text="Nothing here yet — follow some people or check Explore!"
+                   Foreground="#3a3a3a" FontSize="15" HorizontalAlignment="Center"
+                   Margin="0,60" TextWrapping="Wrap" TextAlignment="Center"
+                   IsVisible="{Binding NoPosts}"/>
+        <ItemsControl ItemsSource="{Binding Posts}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ContentControl Content="{Binding}"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.tabBtn">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="#aaaaaa"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="14,7"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.tabBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#2a2a2a"/>
+      <Setter Property="TextElement.Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.storyAddBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="4,2"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

@@ -1,0 +1,6 @@
+@InstogramServer_HostAddress = http://localhost:5289
+
+GET {{InstogramServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

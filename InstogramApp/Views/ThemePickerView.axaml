@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:InstogramApp.ViewModels"
+             x:Class="InstogramApp.Views.ThemePickerView">
+
+  <Grid Background="{DynamicResource AppBgBrush}" Margin="24">
+    <StackPanel MaxWidth="460" HorizontalAlignment="Center" Spacing="16">
+
+      <!-- Header -->
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <Button Click="OnBack" Background="#01000000" BorderThickness="0"
+                Foreground="#8b5cf6" FontSize="20" Padding="0" Cursor="Hand"
+                Content="←"/>
+        <TextBlock Text="Choose Theme" Foreground="{DynamicResource AppTextBrush}"
+                   FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Theme list -->
+      <ItemsControl ItemsSource="{Binding Themes}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:ThemeOptionViewModel}">
+            <Button Click="OnSelectTheme" Margin="6" Padding="0"
+                    Background="#01000000" BorderThickness="0" Cursor="Hand">
+              <Grid Width="150" Height="90">
+                <!-- Unselected card -->
+                <Border CornerRadius="12" Background="{DynamicResource AppInputBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="2"
+                        IsVisible="{Binding IsNotSelected}">
+                  <TextBlock Text="{Binding Label}" Foreground="#aaaaaa"
+                             FontSize="14" FontWeight="Medium"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <!-- Selected card -->
+                <Border CornerRadius="12" Background="#1e1030"
+                        BorderBrush="#8b5cf6" BorderThickness="2"
+                        IsVisible="{Binding IsSelected}">
+                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource AppTextBrush}"
+                               FontSize="14" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="✓ Active" Foreground="#8b5cf6"
+                               FontSize="11" FontWeight="Bold"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </Grid>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+    </StackPanel>
+  </Grid>
+</UserControl>

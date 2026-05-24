@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.CropView">
+
+  <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource AppBgBrush}">
+
+    <!-- Header bar -->
+    <Border Grid.Row="0" Padding="20,14"
+            Background="{DynamicResource AppSurfaceBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Grid.Column="0" Click="OnCancel"
+                Background="#01000000" BorderThickness="0"
+                Foreground="#888888" FontSize="14" Padding="0" Cursor="Hand"
+                Content="Cancel"/>
+        <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="2">
+          <TextBlock Text="Crop Photo" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="17" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding StatusText}" Foreground="#888888"
+                     FontSize="12" HorizontalAlignment="Center"/>
+        </StackPanel>
+        <Button Grid.Column="2" Click="OnConfirm"
+                Background="#8b5cf6" Foreground="White"
+                FontSize="14" FontWeight="SemiBold"
+                Padding="18,7" CornerRadius="8" Cursor="Hand"
+                Content="Apply"/>
+      </Grid>
+    </Border>
+
+    <!-- Crop canvas area — fills available space -->
+    <Grid Grid.Row="1" Name="CanvasHost" Background="#111111"
+          ClipToBounds="True">
+      <!-- Source image, scaled to fit, centred -->
+      <Image Name="SourceImage" Stretch="Uniform"
+             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+      <!-- Overlay canvas drawn by code-behind -->
+      <Canvas Name="OverlayCanvas"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              IsHitTestVisible="True"/>
+    </Grid>
+
+    <!-- Bottom hint -->
+    <Border Grid.Row="2" Padding="16,10"
+            Background="{DynamicResource AppSurfaceBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0">
+      <TextBlock Text="Drag inside the circle to move · drag corners to resize"
+                 Foreground="#666666" FontSize="12"
+                 HorizontalAlignment="Center"/>
+    </Border>
+
+  </Grid>
+</UserControl>

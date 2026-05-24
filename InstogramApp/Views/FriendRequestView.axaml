@@ -1,0 +1,137 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:InstogramApp.ViewModels"
+             x:Class="InstogramApp.Views.FriendRequestView">
+
+  <Grid Background="{DynamicResource AppBgBrush}" Margin="24">
+    <StackPanel Spacing="16" MaxWidth="500" HorizontalAlignment="Center">
+
+      <!-- Header -->
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Click="OnBack" Background="#01000000" BorderThickness="0"
+                Foreground="#8b5cf6" FontSize="20" Padding="0" Cursor="Hand"
+                Content="←"/>
+        <TextBlock Text="Friend Requests" Foreground="{DynamicResource AppTextBrush}"
+                   FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Tabs -->
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Click="OnIncomingTab" Content="Incoming"
+                Classes="tabActive" IsVisible="{Binding ShowIncoming}"
+                Cursor="Hand"/>
+        <Button Click="OnIncomingTab" Content="Incoming"
+                Classes="tabInactive" IsVisible="{Binding ShowOutgoing}"
+                Cursor="Hand"/>
+        <Button Click="OnOutgoingTab" Content="Sent"
+                Classes="tabActive" IsVisible="{Binding ShowOutgoing}"
+                Cursor="Hand"/>
+        <Button Click="OnOutgoingTab" Content="Sent"
+                Classes="tabInactive" IsVisible="{Binding ShowIncoming}"
+                Cursor="Hand"/>
+      </StackPanel>
+
+      <!-- Incoming list -->
+      <StackPanel Spacing="0" IsVisible="{Binding ShowIncoming}">
+        <ItemsControl ItemsSource="{Binding Incoming}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:FriendRequestRowViewModel}">
+              <Border Background="{DynamicResource AppCardBrush}" CornerRadius="12" Padding="16"
+                      BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <!-- Avatar -->
+                  <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                          Background="{Binding AccentColor}" Margin="0,0,12,0">
+                    <TextBlock Text="{Binding AvatarLetter}" Foreground="{DynamicResource AppTextBrush}"
+                               FontWeight="Bold" FontSize="18"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+
+                  <!-- Name -->
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource AppTextBrush}"
+                               FontSize="15" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
+                               Foreground="#666666" FontSize="12"/>
+                  </StackPanel>
+
+                  <!-- Action result -->
+                  <TextBlock Grid.Column="2" Text="{Binding ActionResult}"
+                             Foreground="#a78bfa" FontSize="13" VerticalAlignment="Center"
+                             IsVisible="{Binding IsActioned}"/>
+
+                  <!-- Buttons -->
+                  <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                              IsVisible="{Binding IsNotActioned}">
+                    <Button Click="OnAccept" Tag="{Binding}"
+                            Content="Accept" Background="#8b5cf6"
+                            Foreground="{DynamicResource AppTextBrush}" Padding="12,6" CornerRadius="8"
+                            FontSize="13" Cursor="Hand"/>
+                    <Button Click="OnDecline" Tag="{Binding}"
+                            Content="Decline" Background="{DynamicResource AppInputBrush}"
+                            Foreground="#aaaaaa" Padding="12,6" CornerRadius="8"
+                            FontSize="13" Cursor="Hand"/>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="No incoming friend requests" Foreground="#444444"
+                   FontSize="14" HorizontalAlignment="Center" Margin="0,20"
+                   IsVisible="{Binding Incoming.Count, Converter={x:Static BoolConverters.Not}}"/>
+      </StackPanel>
+
+      <!-- Outgoing list -->
+      <StackPanel Spacing="0" IsVisible="{Binding ShowOutgoing}">
+        <ItemsControl ItemsSource="{Binding Outgoing}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:FriendRequestRowViewModel}">
+              <Border Background="{DynamicResource AppCardBrush}" CornerRadius="12" Padding="16"
+                      BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                          Background="#333333" Margin="0,0,12,0">
+                    <TextBlock Text="{Binding AvatarLetter}" Foreground="{DynamicResource AppTextBrush}"
+                               FontWeight="Bold" FontSize="18"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource AppTextBrush}"
+                               FontSize="15" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
+                               Foreground="#666666" FontSize="12"/>
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Text="Pending" Foreground="#555555"
+                             FontSize="13" VerticalAlignment="Center"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="No outgoing friend requests" Foreground="#444444"
+                   FontSize="14" HorizontalAlignment="Center" Margin="0,20"
+                   IsVisible="{Binding Outgoing.Count, Converter={x:Static BoolConverters.Not}}"/>
+      </StackPanel>
+
+    </StackPanel>
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.tabActive">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="Padding" Value="16,8"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.tabInactive">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="Padding" Value="16,8"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="FontSize" Value="13"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

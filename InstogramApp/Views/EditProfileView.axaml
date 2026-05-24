@@ -1,0 +1,238 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:InstogramApp.Converters"
+             x:Class="InstogramApp.Views.EditProfileView">
+
+  <UserControl.Resources>
+    <conv:PathToBitmapConverter x:Key="PathToBitmap"/>
+  </UserControl.Resources>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <Grid HorizontalAlignment="Center" Width="520" Margin="0,28,0,28">
+      <StackPanel Spacing="20">
+
+        <!-- Header -->
+        <Grid ColumnDefinitions="Auto,*">
+          <Button Grid.Column="0" Click="OnBack" Classes="ghostBtn"
+                  Content="← Back" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="1" Text="Edit Profile" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="22" FontWeight="Bold" Margin="16,0,0,0"
+                     VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- ── Avatar ──────────────────────────────────────────────────── -->
+        <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="14">
+            <TextBlock Text="PROFILE PICTURE" Foreground="#666666"
+                       FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
+
+            <Grid ColumnDefinitions="Auto,*">
+              <!-- Preview circle -->
+              <Grid Grid.Column="0" Width="90" Height="90">
+                <!-- Image avatar -->
+                <Border CornerRadius="45" ClipToBounds="True"
+                        IsVisible="{Binding HasAvatar}"
+                        Width="90" Height="90">
+                  <Image Source="{Binding AvatarPath, Converter={StaticResource PathToBitmap}}"
+                         Stretch="UniformToFill"
+                         Width="90" Height="90"/>
+                </Border>
+                <!-- Initials fallback -->
+                <Border Width="90" Height="90" CornerRadius="45"
+                        Background="{Binding SelectedColor}"
+                        IsVisible="{Binding HasNoAvatar}">
+                  <TextBlock Text="{Binding DisplayName[0]}" Foreground="{DynamicResource AppTextBrush}"
+                             FontWeight="Bold" FontSize="36"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+              </Grid>
+
+              <!-- Buttons -->
+              <StackPanel Grid.Column="1" Margin="18,0,0,0"
+                          VerticalAlignment="Center" Spacing="10">
+                <Button Click="OnPickAvatar" Classes="primaryBtn"
+                        Content="Upload Image" HorizontalAlignment="Left"
+                        Padding="18,9"/>
+                <Button Click="OnClearAvatar" Classes="ghostBtn"
+                        Content="Remove photo" HorizontalAlignment="Left"
+                        IsVisible="{Binding HasAvatar}"
+                        Foreground="#ff6b6b" FontSize="13"/>
+                <TextBlock Text="PNG, JPG, GIF, WEBP supported"
+                           Foreground="#444444" FontSize="11"/>
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ── Profile info ────────────────────────────────────────────── -->
+        <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="14">
+            <TextBlock Text="PROFILE INFO" Foreground="#666666"
+                       FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"    Classes="label"/>
+              <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding DisplayName}"
+                         Classes="field" Margin="0,0,0,10"/>
+
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Bio"     Classes="label"/>
+              <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding Bio}"
+                         PlaceholderText="Tell the world about yourself…"
+                         AcceptsReturn="True" MinHeight="70"
+                         Classes="field" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="Website" Classes="label"/>
+              <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding Website}"
+                         PlaceholderText="https://…"
+                         Classes="field" Margin="0,0,0,10"/>
+
+              <TextBlock Grid.Row="3" Grid.Column="0" Text="Email"   Classes="label"/>
+              <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding Email}"
+                         Classes="field" Margin="0,0,0,10"/>
+
+              <TextBlock Grid.Row="4" Grid.Column="0" Text="Phone"   Classes="label"/>
+              <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding Phone}"
+                         Classes="field"/>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ── Accent colour ───────────────────────────────────────────── -->
+        <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="14">
+            <TextBlock Text="ACCENT COLOUR" Foreground="#666666"
+                       FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
+            <TextBlock Text="Used for your avatar background and highlights when no photo is set"
+                       Foreground="#444444" FontSize="12" TextWrapping="Wrap"/>
+
+            <!-- Selected colour preview strip -->
+            <Grid ColumnDefinitions="Auto,*">
+              <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                      Background="{Binding SelectedColor}" Margin="0,0,12,0"/>
+              <TextBlock Grid.Column="1" Text="{Binding SelectedColor}"
+                         Foreground="#888888" FontSize="13" FontFamily="Consolas,Monospace"
+                         VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Colour swatches — 5 per row -->
+            <ItemsControl ItemsSource="{Binding AccentColors}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Width="48" Height="48" Margin="0,0,8,8">
+                    <!-- Colour circle -->
+                    <Button Click="OnSelectColor" Tag="{Binding}"
+                            Width="40" Height="40" Margin="4"
+                            CornerRadius="20" Padding="0" Cursor="Hand"
+                            Background="{Binding}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Custom hex input -->
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBox Text="{Binding SelectedColor}"
+                       PlaceholderText="#rrggbb"
+                       Width="110" Classes="field"
+                       FontFamily="Consolas,Monospace"/>
+              <TextBlock Text="or type any hex color"
+                         Foreground="#555555" FontSize="12"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- ── Notifications ───────────────────────────────────────────── -->
+        <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="14">
+            <TextBlock Text="NOTIFICATIONS" Foreground="#666666"
+                       FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
+
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="Direct messages" Foreground="{DynamicResource AppTextBrush}" FontSize="14"/>
+                <TextBlock Text="Get notified when someone messages you"
+                           Foreground="#555555" FontSize="12"/>
+              </StackPanel>
+              <CheckBox Grid.Column="1" IsChecked="{Binding NotifyDMs}"
+                        VerticalAlignment="Center"/>
+            </Grid>
+
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}"/>
+
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="Posts from people you follow" Foreground="{DynamicResource AppTextBrush}" FontSize="14"/>
+                <TextBlock Text="Get notified when someone you follow posts"
+                           Foreground="#555555" FontSize="12"/>
+              </StackPanel>
+              <CheckBox Grid.Column="1" IsChecked="{Binding NotifyFollowedPosts}"
+                        VerticalAlignment="Center"/>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- Feedback -->
+        <TextBlock Text="{Binding Status}" Foreground="#a78bfa" FontSize="14"
+                   IsVisible="{Binding Status,
+                   Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080" FontSize="14"
+                   IsVisible="{Binding ErrorMessage,
+                   Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+        <Button Click="OnGoThemes" Content="🎨  Choose Theme" Classes="ghostBtn"
+                HorizontalAlignment="Left" FontSize="14" Foreground="#8b5cf6"/>
+
+        <Button Click="OnSave" Content="Save Changes" Classes="primaryBtn"
+                HorizontalAlignment="Stretch"/>
+
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+      <Setter Property="Margin" Value="0,10,16,0"/>
+      <Setter Property="Width" Value="70"/>
+    </Style>
+    <Style Selector="TextBox.field">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Button.primaryBtn">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="14,12"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.ghostBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="Padding" Value="0,6"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

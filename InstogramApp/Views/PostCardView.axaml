@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.PostCardView">
+
+  <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="18,16"
+          Margin="0,0,0,14"
+          BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+    <StackPanel Spacing="12">
+
+      <!-- Author row -->
+      <Grid ColumnDefinitions="44,*,Auto">
+        <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                Background="#8b5cf6">
+          <TextBlock Text="{Binding AuthorInitial}"
+                     Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold" FontSize="17"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="1">
+          <Button Click="OnViewProfile"
+                  Background="#01000000" Foreground="{DynamicResource AppTextBrush}"
+                  FontWeight="SemiBold" FontSize="14" Padding="0"
+                  BorderThickness="0" Cursor="Hand"
+                  Content="{Binding AuthorDisplayName}"/>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="{Binding AuthorUsername, StringFormat='@{0}'}"
+                       Foreground="#555555" FontSize="12"/>
+            <TextBlock Text="·" Foreground="#333333" FontSize="12"/>
+            <TextBlock Text="{Binding Post.CreatedAt, StringFormat='{}{0:MMM d}'}"
+                       Foreground="#555555" FontSize="12"/>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- Caption -->
+      <TextBlock Text="{Binding Post.Caption}" Foreground="#e8e8e8"
+                 TextWrapping="Wrap" FontSize="14" LineHeight="22"/>
+
+      <!-- Tags -->
+      <ItemsControl ItemsSource="{Binding Post.Tags}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="#1e1340" CornerRadius="6" Padding="8,3" Margin="0,0,6,0">
+              <TextBlock Text="{Binding StringFormat='#{0}'}"
+                         Foreground="#a78bfa" FontSize="12" FontWeight="Medium"/>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Divider -->
+      <Border Height="1" Background="{DynamicResource AppBorderBrush}"/>
+
+      <!-- Actions row -->
+      <StackPanel Orientation="Horizontal" Spacing="20">
+        <Button Click="OnLike" Classes="actionBtn"
+                Content="{Binding LikeLabel}"/>
+        <TextBlock Text="{Binding Post.Comments.Count, StringFormat='💬 {0}'}"
+                   Foreground="#666666" VerticalAlignment="Center" FontSize="13"/>
+      </StackPanel>
+
+      <!-- Comments -->
+      <ItemsControl ItemsSource="{Binding CommentPreviews}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding}" Foreground="#888888" FontSize="12"
+                       TextWrapping="Wrap" Margin="0,2"/>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Add comment -->
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0" Text="{Binding CommentText}"
+                 PlaceholderText="Add a comment…" Classes="commentInput"/>
+        <Button Grid.Column="1" Click="OnAddComment"
+                Content="Post" Classes="commentBtn" Margin="8,0,0,0"/>
+      </Grid>
+
+    </StackPanel>
+  </Border>
+
+  <UserControl.Styles>
+    <Style Selector="Button.actionBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="4,2"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.actionBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="TextElement.Foreground" Value="#a78bfa"/>
+    </Style>
+    <Style Selector="TextBox.commentInput">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Padding" Value="12,7"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="Button.commentBtn">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="12,7"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

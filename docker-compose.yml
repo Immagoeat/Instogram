@@ -1,0 +1,18 @@
+services:
+  instogram:
+    build:
+      context: ./InstogramServer
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - instogram_data:/data
+    environment:
+      - ConnectionStrings__Default=Data Source=/data/instogram.db
+      - Jwt__Key=${JWT_KEY:-InstogramSuperSecretKey_ChangeInProduction_32chars!!}
+      - Jwt__Issuer=InstogramServer
+      - Jwt__Audience=InstogramApp
+      - AvatarDir=/data/avatars
+
+volumes:
+  instogram_data:

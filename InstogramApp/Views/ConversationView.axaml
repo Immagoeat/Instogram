@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:InstogramApp.ViewModels"
+             x:Class="InstogramApp.Views.ConversationView">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Background="#111111" Padding="16,12"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <Button Click="OnBack" Classes="ghostBtn" Content="←" FontSize="18"/>
+        <Border Width="38" Height="38" CornerRadius="19" Background="#8b5cf6">
+          <TextBlock Text="{Binding AvatarLetter}" Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold"
+                     FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <Button Click="OnViewProfile" Classes="ghostBtn" Padding="0">
+          <StackPanel Spacing="1">
+            <TextBlock Text="{Binding Partner.DisplayName}" Foreground="{DynamicResource AppTextBrush}"
+                       FontWeight="SemiBold" FontSize="14"/>
+            <TextBlock Text="{Binding Partner.Username, StringFormat='@{0}'}"
+                       Foreground="#777777" FontSize="12"/>
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Border>
+
+    <!-- Message bubbles -->
+    <ScrollViewer Grid.Row="1" Padding="16,12">
+      <ItemsControl ItemsSource="{Binding Messages}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="0,3">
+              <!-- Mine: right-aligned purple -->
+              <Border HorizontalAlignment="Right" MaxWidth="340"
+                      Background="#7c3aed" CornerRadius="16,16,4,16"
+                      Padding="12,8" IsVisible="{Binding IsMine}">
+                <StackPanel Spacing="3">
+                  <TextBlock Text="{Binding Text}" Foreground="{DynamicResource AppTextBrush}"
+                             FontSize="14" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Time}" Foreground="#c4b5fd"
+                             FontSize="10" HorizontalAlignment="Right"/>
+                </StackPanel>
+              </Border>
+              <!-- Theirs: left-aligned dark -->
+              <Border HorizontalAlignment="Left" MaxWidth="340"
+                      Background="{DynamicResource AppInputBrush}" CornerRadius="16,16,16,4"
+                      Padding="12,8" IsVisible="{Binding IsNotMine}">
+                <StackPanel Spacing="3">
+                  <TextBlock Text="{Binding Text}" Foreground="#eeeeee"
+                             FontSize="14" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Time}" Foreground="#555555"
+                             FontSize="10" HorizontalAlignment="Left"/>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- Compose bar -->
+    <Border Grid.Row="2" Background="#111111" Padding="16,10"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0" Text="{Binding NewMessage}"
+                 PlaceholderText="Message…"
+                 Classes="composeInput"/>
+        <Button Grid.Column="1" Click="OnSend" Classes="sendBtn"
+                Content="Send" Margin="10,0,0,0"/>
+      </Grid>
+    </Border>
+
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.ghostBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#aaaaaa"/>
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="TextBox.composeInput">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Padding" Value="14,10"/>
+      <Setter Property="CornerRadius" Value="22"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Button.sendBtn">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="18,10"/>
+      <Setter Property="CornerRadius" Value="22"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

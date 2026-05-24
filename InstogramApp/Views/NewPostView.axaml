@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.NewPostView">
+
+  <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+    <Border Background="{DynamicResource AppCardBrush}" CornerRadius="16" Padding="32"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+      <StackPanel Spacing="18">
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Create Post" Foreground="{DynamicResource AppTextBrush}" FontSize="22" FontWeight="Bold"/>
+          <TextBlock Text="Share something with the world" Foreground="#444444" FontSize="13"/>
+        </StackPanel>
+
+        <Border Height="1" Background="{DynamicResource AppBorderBrush}"/>
+
+        <TextBox Text="{Binding Caption}"
+                 PlaceholderText="What's on your mind? Use #hashtags to tag topics."
+                 AcceptsReturn="True" MinHeight="130" MaxHeight="260"
+                 TextWrapping="Wrap" Classes="darkInput"/>
+
+        <TextBlock Text="{Binding Status}" Foreground="#a78bfa" FontSize="13"
+                   IsVisible="{Binding Status,
+                   Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Click="OnSubmit" Content="Share Post" Classes="primaryBtn" Width="140"/>
+          <Button Click="OnCancel" Content="Discard"    Classes="cancelBtn"  Width="100"/>
+        </StackPanel>
+
+      </StackPanel>
+    </Border>
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="TextBox.darkInput">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Padding" Value="14,12"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Button.primaryBtn">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="14,11"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.cancelBtn">
+      <Setter Property="Background" Value="#1e1e1e"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="14,11"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

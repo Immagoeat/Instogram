@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:InstogramApp.Converters"
+             x:Class="InstogramApp.Views.ProfileView">
+
+  <UserControl.Resources>
+    <conv:PathToBitmapConverter x:Key="PathToBitmap"/>
+  </UserControl.Resources>
+
+  <ScrollViewer>
+    <StackPanel MaxWidth="700" HorizontalAlignment="Center" Margin="28,24" Spacing="16">
+
+      <!-- Profile card -->
+      <Border Background="{DynamicResource AppCardBrush}" CornerRadius="16" Padding="24"
+              BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+
+          <!-- Avatar: photo or initials -->
+          <Grid Grid.Column="0" Width="80" Height="80">
+            <!-- Photo -->
+            <Border CornerRadius="40" ClipToBounds="True"
+                    IsVisible="{Binding HasAvatar}"
+                    Width="80" Height="80">
+              <Image Source="{Binding AvatarPath, Converter={StaticResource PathToBitmap}}"
+                     Stretch="UniformToFill"
+                     Width="80" Height="80"/>
+            </Border>
+            <!-- Initials fallback -->
+            <Border Width="80" Height="80" CornerRadius="40"
+                    Background="{Binding ProfileUser.AccentColor}"
+                    IsVisible="{Binding HasNoAvatar}">
+              <TextBlock Text="{Binding AvatarInitial}"
+                         Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold" FontSize="36"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+          </Grid>
+
+          <!-- Info -->
+          <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center" Spacing="5">
+            <TextBlock Text="{Binding ProfileUser.DisplayName}"
+                       Foreground="{DynamicResource AppTextBrush}" FontSize="22" FontWeight="Bold"/>
+            <TextBlock Text="{Binding ProfileUser.Username, StringFormat='@{0}'}"
+                       Foreground="#666666" FontSize="14"/>
+            <TextBlock Text="{Binding ProfileUser.Bio}" Foreground="#aaaaaa" FontSize="13"
+                       IsVisible="{Binding ProfileUser.Bio,
+                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding ProfileUser.Website}" Foreground="#7c3aed" FontSize="13"
+                       IsVisible="{Binding ProfileUser.Website,
+                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <StackPanel Orientation="Horizontal" Spacing="24" Margin="0,4,0,0">
+              <StackPanel>
+                <TextBlock Text="{Binding FollowerCount}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="17" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Followers" Foreground="#555555" FontSize="11" HorizontalAlignment="Center"/>
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Text="{Binding FollowingCount}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="17" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Following" Foreground="#555555" FontSize="11" HorizontalAlignment="Center"/>
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Text="{Binding PostCount}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="17" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Posts" Foreground="#555555" FontSize="11" HorizontalAlignment="Center"/>
+              </StackPanel>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Follow / Message / Edit buttons -->
+          <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="8">
+            <!-- Other profile -->
+            <Button Click="OnToggleFollow" Classes="followBtn"
+                    Content="{Binding FollowButtonText}"
+                    IsVisible="{Binding IsNotOwnProfile}"/>
+            <Button Click="OnMessage" Classes="messageBtn" Content="Message"
+                    IsVisible="{Binding IsNotOwnProfile}"/>
+            <!-- Own profile -->
+            <Button Click="OnEditProfile" Classes="messageBtn" Content="Edit Profile"
+                    IsVisible="{Binding IsOwnProfile}"/>
+          </StackPanel>
+
+        </Grid>
+      </Border>
+
+      <!-- Following / Followers columns -->
+      <Grid ColumnDefinitions="*,12,*">
+        <Border Grid.Column="0" Background="{DynamicResource AppCardBrush}" CornerRadius="12" Padding="16"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="8">
+            <TextBlock Text="{Binding FollowingCount, StringFormat='Following ({0})'}"
+                       Foreground="{DynamicResource AppTextBrush}" FontWeight="SemiBold" FontSize="13"/>
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}"/>
+            <ItemsControl ItemsSource="{Binding FollowingNames}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding}" Foreground="#888888"
+                             FontSize="12" Margin="0,1"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Background="{DynamicResource AppCardBrush}" CornerRadius="12" Padding="16"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="8">
+            <TextBlock Text="{Binding FollowerCount, StringFormat='Followers ({0})'}"
+                       Foreground="{DynamicResource AppTextBrush}" FontWeight="SemiBold" FontSize="13"/>
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}"/>
+            <ItemsControl ItemsSource="{Binding FollowerNames}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding}" Foreground="#888888"
+                             FontSize="12" Margin="0,1"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- Posts -->
+      <TextBlock Text="Posts" Foreground="{DynamicResource AppTextBrush}" FontSize="16" FontWeight="Bold"
+                 Margin="0,4,0,0"/>
+      <ItemsControl ItemsSource="{Binding Posts}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ContentControl Content="{Binding}"/>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+    </StackPanel>
+  </ScrollViewer>
+
+  <UserControl.Styles>
+    <Style Selector="Button.followBtn">
+      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="18,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.messageBtn">
+      <Setter Property="Background" Value="#1e1e1e"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="18,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="BorderBrush" Value="#333333"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

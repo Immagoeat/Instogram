@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.StoryViewerView">
+
+  <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="420">
+    <StackPanel Spacing="0">
+
+      <!-- Progress dots -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                  Spacing="6" Margin="0,0,0,12">
+        <TextBlock Text="{Binding CurrentIndex}" Foreground="#888888" FontSize="12"/>
+        <TextBlock Text="/" Foreground="#444444" FontSize="12"/>
+        <TextBlock Text="{Binding TotalCount}" Foreground="#888888" FontSize="12"/>
+      </StackPanel>
+
+      <!-- Story card -->
+      <Border CornerRadius="20" Height="420" Background="{Binding BgColor}"
+              ClipToBounds="True">
+        <Grid>
+          <!-- Author bar -->
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="16,16,16,0"
+                      VerticalAlignment="Top">
+            <Border Width="34" Height="34" CornerRadius="17"
+                    Background="{Binding AccentColor}">
+              <TextBlock Text="{Binding AuthorName[0]}" Foreground="{DynamicResource AppTextBrush}"
+                         FontWeight="Bold" FontSize="14"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel VerticalAlignment="Center" Spacing="1">
+              <TextBlock Text="{Binding AuthorAt}" Foreground="{DynamicResource AppTextBrush}"
+                         FontSize="13" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding TimeLabel}" Foreground="#aaaaaa" FontSize="11"/>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Story text -->
+          <TextBlock Text="{Binding StoryText}" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="22" FontWeight="Medium"
+                     TextWrapping="Wrap" TextAlignment="Center"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Margin="28"/>
+
+          <!-- Nav buttons -->
+          <Button Click="OnPrev" IsVisible="{Binding HasPrev}"
+                  Classes="navOverlay" HorizontalAlignment="Left"
+                  VerticalAlignment="Center" Content="‹" FontSize="28"/>
+          <Button Click="OnNext" IsVisible="{Binding HasNext}"
+                  Classes="navOverlay" HorizontalAlignment="Right"
+                  VerticalAlignment="Center" Content="›" FontSize="28"/>
+
+          <!-- Close -->
+          <Button Click="OnClose" Classes="closeBtn"
+                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                  Margin="0,14,14,0" Content="✕"/>
+        </Grid>
+      </Border>
+
+    </StackPanel>
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.navOverlay">
+      <Setter Property="Background" Value="#40000000"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="Padding" Value="14,20"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.closeBtn">
+      <Setter Property="Background" Value="#40000000"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="CornerRadius" Value="14"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FontSize" Value="13"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

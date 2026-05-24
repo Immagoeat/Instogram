@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.CallView">
+
+  <Grid Background="#080010" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24" Width="320">
+
+      <!-- Avatar ring -->
+      <Border Width="110" Height="110" CornerRadius="55"
+              BorderBrush="#8b5cf6" BorderThickness="3"
+              HorizontalAlignment="Center">
+        <Border Width="100" Height="100" CornerRadius="50" Background="#2d1b4e">
+          <TextBlock Text="{Binding RemoteName[0]}" Foreground="{DynamicResource AppTextBrush}"
+                     FontWeight="Bold" FontSize="42"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+      </Border>
+
+      <!-- Name + status -->
+      <StackPanel HorizontalAlignment="Center" Spacing="6">
+        <TextBlock Text="{Binding RemoteName}" Foreground="{DynamicResource AppTextBrush}"
+                   FontSize="26" FontWeight="Bold" HorizontalAlignment="Center"/>
+        <TextBlock Text="{Binding StatusText}" Foreground="#a78bfa"
+                   FontSize="14" HorizontalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Incoming: Accept / Decline -->
+      <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center"
+                  IsVisible="{Binding IsIncoming}">
+        <Button Click="OnDecline"
+                Width="64" Height="64" CornerRadius="32" Padding="0"
+                Background="#e74c3c" Cursor="Hand">
+          <TextBlock Text="✕" Foreground="{DynamicResource AppTextBrush}" FontSize="26"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+        <Button Click="OnAccept"
+                Width="64" Height="64" CornerRadius="32" Padding="0"
+                Background="#2ecc71" Cursor="Hand">
+          <TextBlock Text="✓" Foreground="{DynamicResource AppTextBrush}" FontSize="26"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+      </StackPanel>
+
+      <!-- Active call controls -->
+      <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center"
+                  IsVisible="{Binding IsCallActive}">
+
+        <!-- Mute -->
+        <StackPanel HorizontalAlignment="Center" Spacing="6">
+          <Button Click="OnToggleMute"
+                  Width="56" Height="56" CornerRadius="28" Padding="0"
+                  Background="#2a1a4e" Cursor="Hand">
+            <Grid>
+              <TextBlock Text="🎙" FontSize="22" IsVisible="{Binding IsNotMuted}"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              <TextBlock Text="🔇" FontSize="22" IsVisible="{Binding IsMuted}"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+          </Button>
+          <TextBlock Text="Mute"   Foreground="#888888" FontSize="11" IsVisible="{Binding IsNotMuted}" HorizontalAlignment="Center"/>
+          <TextBlock Text="Unmute" Foreground="#a78bfa" FontSize="11" IsVisible="{Binding IsMuted}"    HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Hang up -->
+        <StackPanel HorizontalAlignment="Center" Spacing="6">
+          <Button Click="OnHangUp"
+                  Width="56" Height="56" CornerRadius="28" Padding="0"
+                  Background="#e74c3c" Cursor="Hand">
+            <TextBlock Text="📵" FontSize="22"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Button>
+          <TextBlock Text="End" Foreground="#888888" FontSize="11"
+                     HorizontalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Outgoing: cancel -->
+      <Button Click="OnHangUp" IsVisible="{Binding IsOutgoing}"
+              Content="Cancel" Background="{DynamicResource AppInputBrush}" Foreground="#aaaaaa"
+              Padding="24,10" CornerRadius="20"
+              HorizontalAlignment="Center" Cursor="Hand"/>
+
+    </StackPanel>
+  </Grid>
+</UserControl>

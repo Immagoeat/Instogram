@@ -1,0 +1,177 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:InstogramApp.ViewModels"
+        xmlns:conv="using:InstogramApp.Converters"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="680"
+        x:Class="InstogramApp.Views.MainWindow"
+        Icon="/Assets/instogram.ico"
+        Title="Instogram"
+        MinWidth="720" MinHeight="520"
+        Background="{DynamicResource AppBgBrush}">
+
+  <Window.Resources>
+    <conv:PathToBitmapConverter x:Key="PathToBitmap"/>
+  </Window.Resources>
+
+  <Grid ColumnDefinitions="220,*">
+
+    <!-- Sidebar -->
+    <Border Grid.Column="0" Background="{DynamicResource AppSurfaceBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,1,0">
+      <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Brand -->
+        <StackPanel Grid.Row="0" Margin="20,28,20,24" Spacing="4">
+          <TextBlock Text="Instogram" FontSize="22" FontWeight="Bold"
+                     Foreground="{DynamicResource AppTextBrush}" LetterSpacing="0.5"/>
+          <TextBlock Text="Share your world" FontSize="11"
+                     Foreground="#444444" LetterSpacing="0.3"/>
+        </StackPanel>
+
+        <!-- Nav items -->
+        <StackPanel Grid.Row="1" Margin="12,0" Spacing="2">
+
+          <Button Click="NavHome" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="⌂" FontSize="18" Width="22" HorizontalAlignment="Center"/>
+              <TextBlock Text="Home" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavExplore" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="⊕" FontSize="18" Width="22" HorizontalAlignment="Center"/>
+              <TextBlock Text="Explore" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavNewPost" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="＋" FontSize="18" Width="22" HorizontalAlignment="Center"/>
+              <TextBlock Text="New Post" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavMessages" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="✉" FontSize="16" Width="22" HorizontalAlignment="Center"/>
+              <TextBlock Text="Messages" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <!-- Notifications with badge -->
+          <Button Click="NavNotifications" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <Grid ColumnDefinitions="22,*,Auto">
+              <TextBlock Grid.Column="0" Text="🔔" FontSize="16" HorizontalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Text="Notifications" VerticalAlignment="Center" Margin="12,0,0,0"/>
+              <Border Grid.Column="2" Background="#8b5cf6" CornerRadius="10"
+                      Padding="6,2" IsVisible="{Binding HasNotifications}"
+                      VerticalAlignment="Center">
+                <TextBlock Text="{Binding NotificationCount}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="11" FontWeight="Bold"/>
+              </Border>
+            </Grid>
+          </Button>
+
+          <Button Click="NavFriends"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="👥" FontSize="15" Width="22" HorizontalAlignment="Center"/>
+              <TextBlock Text="Friends" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavProfile" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="◉" FontSize="16" Width="22" HorizontalAlignment="Center"/>
+              <TextBlock Text="Profile" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+        </StackPanel>
+
+        <!-- User card + logout -->
+        <Border Grid.Row="2" Margin="12,0,12,16" IsVisible="{Binding IsLoggedIn}">
+          <StackPanel Spacing="6">
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}" Margin="4,0"/>
+            <Border Background="{DynamicResource AppCardBrush}" CornerRadius="10" Padding="12,10">
+              <Grid ColumnDefinitions="36,*,Auto">
+                <!-- Avatar: photo or accent initial -->
+                <Grid Grid.Column="0" Width="32" Height="32">
+                  <Border CornerRadius="16" ClipToBounds="True"
+                          Width="32" Height="32"
+                          IsVisible="{Binding SidebarHasAvatar}">
+                    <Image Source="{Binding SidebarAvatarPath, Converter={StaticResource PathToBitmap}}"
+                           Stretch="UniformToFill" Width="32" Height="32"/>
+                  </Border>
+                  <Border Width="32" Height="32" CornerRadius="16"
+                          Background="{Binding SidebarAccent}"
+                          IsVisible="{Binding SidebarHasNoAvatar}">
+                    <TextBlock Text="{Binding LoggedInAs[1]}"
+                               Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold" FontSize="14"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="1">
+                  <TextBlock Text="{Binding LoggedInDisplay}" Foreground="{DynamicResource AppTextBrush}"
+                             FontSize="13" FontWeight="SemiBold"
+                             TextTrimming="CharacterEllipsis"/>
+                  <TextBlock Text="{Binding LoggedInAs}" Foreground="#555555" FontSize="11"/>
+                </StackPanel>
+                <Button Grid.Column="2" Click="NavLogout"
+                        Classes="logoutBtn" Content="↩" ToolTip.Tip="Log out"/>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Border>
+
+      </Grid>
+    </Border>
+
+    <!-- Main content -->
+    <ContentControl Grid.Column="1" Content="{Binding CurrentPage}"/>
+
+  </Grid>
+
+  <Window.Styles>
+    <Style Selector="Button.navBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="Foreground" Value="#999999"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="14,11"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.navBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#181818"/>
+      <Setter Property="TextElement.Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.logoutBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="FontSize" Value="15"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.logoutBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="TextElement.Foreground" Value="#ff6b6b"/>
+    </Style>
+  </Window.Styles>
+</Window>
