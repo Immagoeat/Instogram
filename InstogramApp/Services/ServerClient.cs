@@ -103,6 +103,7 @@ public class ServerClient
         _http    = new HttpClient { BaseAddress = new Uri(_baseUrl + "/") };
         _http.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        _http.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
     }
 
     public async Task ConnectHubAsync()
@@ -113,7 +114,10 @@ public class ServerClient
         }
 
         _hub = new HubConnectionBuilder()
-            .WithUrl($"{_baseUrl}/hub?access_token={_token}")
+            .WithUrl($"{_baseUrl}/hub?access_token={_token}", opts =>
+            {
+                opts.Headers["ngrok-skip-browser-warning"] = "true";
+            })
             .WithAutomaticReconnect()
             .Build();
 

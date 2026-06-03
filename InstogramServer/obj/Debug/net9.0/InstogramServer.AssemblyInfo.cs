@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InstogramServer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+65dc633966dc91f7dbed6cb5ee3060c022782508")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d6471fd9146c3259c0182ad9d1e302c0fd03e436")]
 [assembly: System.Reflection.AssemblyProductAttribute("InstogramServer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InstogramServer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
