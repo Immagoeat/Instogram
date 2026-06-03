@@ -1,3 +1,28 @@
+# Build output
+bin/
+obj/
 
-main/bin
-main/obj
+# .NET
+*.user
+*.suo
+.vs/
+*.swp
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# App data / secrets
+data/
+images/
+avatars/
+server.json
+appsettings.Development.json
+
+# ngrok
+/tmp/ngrok-*.log
+
+# OS
+.DS_Store
+Thumbs.db
