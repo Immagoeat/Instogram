@@ -1,65 +1,213 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:InstogramApp.Controls"
              x:Class="InstogramApp.Views.NewPostView">
 
-  <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-    <Border Background="{DynamicResource AppCardBrush}" CornerRadius="16" Padding="32"
-            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
-      <StackPanel Spacing="18">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid VerticalAlignment="Top" HorizontalAlignment="Center" Width="560" Margin="0,28,0,36">
+      <Border Background="{DynamicResource AppCardBrush}" CornerRadius="20" Padding="36,32"
+              BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+        <StackPanel Spacing="20">
 
-        <StackPanel Spacing="4">
-          <TextBlock Text="Create Post" Foreground="{DynamicResource AppTextBrush}" FontSize="22" FontWeight="Bold"/>
-          <TextBlock Text="Share something with the world" Foreground="#444444" FontSize="13"/>
+          <StackPanel Spacing="4">
+            <TextBlock Text="Create Post" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="Share something with the world" Foreground="#555555" FontSize="13"/>
+          </StackPanel>
+
+          <Border Height="1" Background="{DynamicResource AppBorderBrush}" Opacity="0.6"/>
+
+          <!-- Caption -->
+          <StackPanel Spacing="6">
+            <TextBlock Text="CAPTION" Foreground="#555555" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="0.8"/>
+            <TextBox Text="{Binding Caption}"
+                     PlaceholderText="What's on your mind? Use #hashtags to tag topics."
+                     AcceptsReturn="True" MinHeight="100" MaxHeight="220"
+                     TextWrapping="Wrap" Classes="postInput"/>
+          </StackPanel>
+
+          <!-- Image area -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="PHOTO" Foreground="#555555" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="0.8"/>
+            <!-- Preview -->
+            <Border CornerRadius="12" ClipToBounds="True" IsVisible="{Binding HasImage}"
+                    MaxHeight="340" BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1">
+              <Grid>
+                <ctl:AsyncImage Source="{Binding ImagePath}"/>
+                <Button Click="OnRemoveImage" Classes="removeBtn"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="10" Content="✕ Remove"/>
+              </Grid>
+            </Border>
+
+            <!-- Pick button -->
+            <Button Click="OnPickImage" IsVisible="{Binding !HasImage}"
+                    Classes="imagePickBtn">
+              <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                <TextBlock Text="🖼" FontSize="18"/>
+                <StackPanel VerticalAlignment="Center" Spacing="1">
+                  <TextBlock Text="Add a photo" FontSize="14" FontWeight="Medium"/>
+                  <TextBlock Text="PNG, JPG, GIF, WebP up to 10 MB" FontSize="11" Foreground="#555555"/>
+                </StackPanel>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <!-- Suggested tags (from typed #hashtags) -->
+          <StackPanel Spacing="8" IsVisible="{Binding HasSuggestedTags}">
+            <TextBlock Text="DETECTED TAGS" Foreground="#555555" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="0.8"/>
+            <ItemsControl ItemsSource="{Binding SuggestedTags}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Click="OnTagChipClick" Tag="{Binding}"
+                          Classes="tagChip" Margin="0,0,6,6"
+                          Content="{Binding Tag, StringFormat='#{0}'}"
+                          Background="{Binding ChipBackground}"
+                          Foreground="{Binding ChipForeground}"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <!-- Premade tags -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="QUICK TAGS" Foreground="#555555" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="0.8"/>
+            <ItemsControl ItemsSource="{Binding PremadeTags}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Click="OnTagChipClick" Tag="{Binding}"
+                          Classes="tagChip" Margin="0,0,6,6"
+                          Content="{Binding Tag, StringFormat='#{0}'}"
+                          Background="{Binding ChipBackground}"
+                          Foreground="{Binding ChipForeground}"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <!-- Status / error -->
+          <Border Background="#100a20" CornerRadius="10" Padding="14,10"
+                  BorderBrush="#2a1a50" BorderThickness="1"
+                  IsVisible="{Binding Status,
+                  Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding Status}" Foreground="#a78bfa"
+                       FontSize="13" TextWrapping="Wrap"/>
+          </Border>
+
+          <!-- Progress -->
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}"
+                       Height="3" Foreground="#8b5cf6"
+                       Background="{DynamicResource AppInputBrush}" CornerRadius="2"/>
+
+          <Border Height="1" Background="{DynamicResource AppBorderBrush}" Opacity="0.6"/>
+
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Click="OnSubmit" Content="Share Post" Classes="primaryBtn" Width="150"/>
+            <Button Click="OnCancel" Content="Discard"    Classes="cancelBtn"  Width="100"/>
+          </StackPanel>
+
         </StackPanel>
-
-        <Border Height="1" Background="{DynamicResource AppBorderBrush}"/>
-
-        <TextBox Text="{Binding Caption}"
-                 PlaceholderText="What's on your mind? Use #hashtags to tag topics."
-                 AcceptsReturn="True" MinHeight="130" MaxHeight="260"
-                 TextWrapping="Wrap" Classes="darkInput"/>
-
-        <TextBlock Text="{Binding Status}" Foreground="#a78bfa" FontSize="13"
-                   IsVisible="{Binding Status,
-                   Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <Button Click="OnSubmit" Content="Share Post" Classes="primaryBtn" Width="140"/>
-          <Button Click="OnCancel" Content="Discard"    Classes="cancelBtn"  Width="100"/>
-        </StackPanel>
-
-      </StackPanel>
-    </Border>
-  </Grid>
+      </Border>
+    </Grid>
+  </ScrollViewer>
 
   <UserControl.Styles>
-    <Style Selector="TextBox.darkInput">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
-      <Setter Property="Padding" Value="14,12"/>
-      <Setter Property="CornerRadius" Value="10"/>
+    <Style Selector="TextBox.postInput">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
+    <Style Selector="TextBox.postInput /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.postInput:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.postInput:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.postInput:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.postInput /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
     <Style Selector="Button.primaryBtn">
-      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Background" Value="#7c3aed"/>
       <Setter Property="Foreground" Value="White"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="FontSize" Value="14"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="CornerRadius" Value="10"/>
-      <Setter Property="HorizontalContentAlignment" Value="Center"/>
-      <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-    <Style Selector="Button.cancelBtn">
-      <Setter Property="Background" Value="#1e1e1e"/>
-      <Setter Property="Foreground" Value="#888888"/>
-      <Setter Property="FontSize" Value="14"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.primaryBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#6d28d9"/>
+    </Style>
+    <Style Selector="Button.cancelBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.imagePickBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="20,18"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="BorderThickness" Value="2"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.imagePickBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1a1a2e"/>
+    </Style>
+    <Style Selector="Button.removeBtn">
+      <Setter Property="Background" Value="#dd000000"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.tagChip">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="10,5"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2a2a4a"/>
+      <Setter Property="Cursor" Value="Hand"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

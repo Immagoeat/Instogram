@@ -12,11 +12,8 @@ public class InstogramHub(AppDbContext db) : Hub
 {
     Guid Me => Guid.Parse(Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    // ── Connection lifecycle ───────────────────────────────────────────────
-
     public override async Task OnConnectedAsync()
     {
-        // Join all conversation groups this user belongs to
         var convIds = await db.ConvMembers
             .Where(m => m.UserId == Me)
             .Select(m => m.ConversationId)
@@ -28,11 +25,8 @@ public class InstogramHub(AppDbContext db) : Hub
         await base.OnConnectedAsync();
     }
 
-    // ── Messaging ─────────────────────────────────────────────────────────
-
     public async Task SendMessage(Guid conversationId, string text)
     {
-        // Verify membership
         var isMember = await db.ConvMembers
             .AnyAsync(m => m.ConversationId == conversationId && m.UserId == Me);
         if (!isMember) return;
@@ -40,25 +34,22 @@ public class InstogramHub(AppDbContext db) : Hub
         var msg = new Message { ConversationId = conversationId, SenderId = Me, Text = text.Trim() };
         db.Messages.Add(msg);
 
-        // Notify other members
         var memberIds = await db.ConvMembers
             .Where(m => m.ConversationId == conversationId && m.UserId != Me)
             .Select(m => m.UserId).ToListAsync();
 
         var me = await db.Users.FindAsync(Me);
-        foreach (var uid in memberIds)
-        {
-            var recipient = await db.Users.FindAsync(uid);
-            if (recipient?.NotifyDMs == true)
+        var notifiableIds = await db.Users
+            .Where(u => memberIds.Contains(u.Id) && u.NotifyDMs)
+            .Select(u => u.Id)
+            .ToListAsync();
+        var preview = text.Length > 40 ? text[..37] + "…" : text;
+        foreach (var uid in notifiableIds)
+            db.Notifications.Add(new Notification
             {
-                var notif = new Notification
-                {
-                    RecipientId = uid, ActorId = Me, Type = "dm",
-                    Body = $"@{me?.Username} messaged you: {(text.Length > 40 ? text[..37] + "…" : text)}"
-                };
-                db.Notifications.Add(notif);
-            }
-        }
+                RecipientId = uid, ActorId = Me, Type = "dm",
+                Body = $"@{me?.Username} messaged you: {preview}"
+            });
 
         await db.SaveChangesAsync();
 
@@ -70,7 +61,6 @@ public class InstogramHub(AppDbContext db) : Hub
         };
         await Clients.Group($"conv:{conversationId}").SendAsync("NewMessage", payload);
 
-        // Push unread count update to each recipient
         foreach (var uid in memberIds)
         {
             var count = await db.Notifications.CountAsync(n => n.RecipientId == uid && !n.IsRead);
@@ -78,16 +68,12 @@ public class InstogramHub(AppDbContext db) : Hub
         }
     }
 
-    // ── Typing indicator ──────────────────────────────────────────────────
-
     public async Task Typing(Guid conversationId)
     {
         var me = await db.Users.FindAsync(Me);
         await Clients.OthersInGroup($"conv:{conversationId}")
             .SendAsync("UserTyping", new { conversationId, username = me?.Username });
     }
-
-    // ── Call signalling (WebRTC) ──────────────────────────────────────────
 
     public async Task CallUser(Guid targetUserId, string sdpOffer)
     {
@@ -108,13 +94,12 @@ public class InstogramHub(AppDbContext db) : Hub
         await Clients.Group($"user:{targetUserId}")
             .SendAsync("CallEnded", new { FromId = Me });
 
-    // ── Group chat management ─────────────────────────────────────────────
+    private Task<bool> IsAdminAsync(Guid conversationId) =>
+        db.ConvMembers.AnyAsync(m => m.ConversationId == conversationId && m.UserId == Me && m.IsAdmin);
 
     public async Task RenameConversation(Guid conversationId, string newName)
     {
-        var isAdmin = await db.ConvMembers
-            .AnyAsync(m => m.ConversationId == conversationId && m.UserId == Me && m.IsAdmin);
-        if (!isAdmin) return;
+        if (!await IsAdminAsync(conversationId)) return;
 
         var conv = await db.Conversations.FindAsync(conversationId);
         if (conv == null) return;
@@ -127,9 +112,7 @@ public class InstogramHub(AppDbContext db) : Hub
 
     public async Task AddMember(Guid conversationId, Guid userId)
     {
-        var isAdmin = await db.ConvMembers
-            .AnyAsync(m => m.ConversationId == conversationId && m.UserId == Me && m.IsAdmin);
-        if (!isAdmin) return;
+        if (!await IsAdminAsync(conversationId)) return;
 
         var already = await db.ConvMembers
             .AnyAsync(m => m.ConversationId == conversationId && m.UserId == userId);

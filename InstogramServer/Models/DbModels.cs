@@ -17,6 +17,8 @@ public class User
     public string AvatarUrl     { get; set; } = "";
     public bool   NotifyDMs     { get; set; } = true;
     public bool   NotifyFollowedPosts { get; set; } = true;
+    public bool   IsVerified    { get; set; } = false;
+    public bool   IsMaster      { get; set; } = false;
     public DateTime CreatedAt   { get; set; } = DateTime.UtcNow;
 
     public ICollection<Follow>          Followers        { get; set; } = new List<Follow>();
@@ -56,6 +58,7 @@ public class Post
     public User   Author    { get; set; } = null!;
     public string Caption   { get; set; } = "";
     public string Tags      { get; set; } = ""; // comma-separated
+    public string ImageUrl  { get; set; } = "";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<PostLike>    Likes    { get; set; } = new List<PostLike>();
     public ICollection<Comment>     Comments { get; set; } = new List<Comment>();
@@ -87,6 +90,14 @@ public class Story
     public User   Author          { get; set; } = null!;
     public string Text            { get; set; } = "";
     public string BackgroundColor { get; set; } = "#1a0a3a";
+    public string ImageUrl        { get; set; } = "";
+    // Fractional position (0‒1) and scale of the text overlay
+    public double TextX           { get; set; } = 0.5;
+    public double TextY           { get; set; } = 0.5;
+    public double TextScale       { get; set; } = 1.0;
+    public double TextRotation    { get; set; } = 0.0;
+    // Comma-separated usernames tagged in this story
+    public string TaggedUsers     { get; set; } = "";
     public DateTime CreatedAt     { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt     { get; set; } = DateTime.UtcNow.AddHours(24);
     public ICollection<StorySeen> SeenBy { get; set; } = new List<StorySeen>();

@@ -154,6 +154,7 @@ namespace InstogramDependencies
         public Guid AuthorId { get; set; }
         public string Text { get; set; } = "";
         public string BackgroundColor { get; set; } = "#1a0a3a";
+        public string TaggedUsers { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         // Stories expire after 24 h
         public bool IsExpired => (DateTime.UtcNow - CreatedAt).TotalHours >= 24;

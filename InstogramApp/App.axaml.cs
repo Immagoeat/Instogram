@@ -16,7 +16,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        ThemeService.Apply(ThemeService.Theme.Dark);
+        ThemeService.Apply(ThemeService.LoadSaved());
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

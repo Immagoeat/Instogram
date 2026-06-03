@@ -3,83 +3,151 @@
              x:Class="InstogramApp.Views.CallView">
 
   <Grid Background="#080010" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24" Width="320">
 
-      <!-- Avatar ring -->
+    <!-- ── Remote video (full background when active) ────────────────────── -->
+    <Border CornerRadius="0" ClipToBounds="True" IsVisible="{Binding HasRemoteVideo}">
+      <Image Source="{Binding RemoteFrame}" Stretch="Uniform"/>
+    </Border>
+
+    <!-- ── Avatar (when no remote video) ────────────────────────────────── -->
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                IsVisible="{Binding !HasRemoteVideo}" Spacing="16">
       <Border Width="110" Height="110" CornerRadius="55"
               BorderBrush="#8b5cf6" BorderThickness="3"
               HorizontalAlignment="Center">
         <Border Width="100" Height="100" CornerRadius="50" Background="#2d1b4e">
-          <TextBlock Text="{Binding RemoteName[0]}" Foreground="{DynamicResource AppTextBrush}"
+          <TextBlock Text="{Binding RemoteName[0]}" Foreground="White"
                      FontWeight="Bold" FontSize="42"
                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
       </Border>
-
-      <!-- Name + status -->
       <StackPanel HorizontalAlignment="Center" Spacing="6">
-        <TextBlock Text="{Binding RemoteName}" Foreground="{DynamicResource AppTextBrush}"
+        <TextBlock Text="{Binding RemoteName}" Foreground="White"
                    FontSize="26" FontWeight="Bold" HorizontalAlignment="Center"/>
         <TextBlock Text="{Binding StatusText}" Foreground="#a78bfa"
                    FontSize="14" HorizontalAlignment="Center"/>
       </StackPanel>
-
-      <!-- Incoming: Accept / Decline -->
-      <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center"
-                  IsVisible="{Binding IsIncoming}">
-        <Button Click="OnDecline"
-                Width="64" Height="64" CornerRadius="32" Padding="0"
-                Background="#e74c3c" Cursor="Hand">
-          <TextBlock Text="✕" Foreground="{DynamicResource AppTextBrush}" FontSize="26"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </Button>
-        <Button Click="OnAccept"
-                Width="64" Height="64" CornerRadius="32" Padding="0"
-                Background="#2ecc71" Cursor="Hand">
-          <TextBlock Text="✓" Foreground="{DynamicResource AppTextBrush}" FontSize="26"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </Button>
-      </StackPanel>
-
-      <!-- Active call controls -->
-      <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center"
-                  IsVisible="{Binding IsCallActive}">
-
-        <!-- Mute -->
-        <StackPanel HorizontalAlignment="Center" Spacing="6">
-          <Button Click="OnToggleMute"
-                  Width="56" Height="56" CornerRadius="28" Padding="0"
-                  Background="#2a1a4e" Cursor="Hand">
-            <Grid>
-              <TextBlock Text="🎙" FontSize="22" IsVisible="{Binding IsNotMuted}"
-                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
-              <TextBlock Text="🔇" FontSize="22" IsVisible="{Binding IsMuted}"
-                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
-          </Button>
-          <TextBlock Text="Mute"   Foreground="#888888" FontSize="11" IsVisible="{Binding IsNotMuted}" HorizontalAlignment="Center"/>
-          <TextBlock Text="Unmute" Foreground="#a78bfa" FontSize="11" IsVisible="{Binding IsMuted}"    HorizontalAlignment="Center"/>
-        </StackPanel>
-
-        <!-- Hang up -->
-        <StackPanel HorizontalAlignment="Center" Spacing="6">
-          <Button Click="OnHangUp"
-                  Width="56" Height="56" CornerRadius="28" Padding="0"
-                  Background="#e74c3c" Cursor="Hand">
-            <TextBlock Text="📵" FontSize="22"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-          </Button>
-          <TextBlock Text="End" Foreground="#888888" FontSize="11"
-                     HorizontalAlignment="Center"/>
-        </StackPanel>
-      </StackPanel>
-
-      <!-- Outgoing: cancel -->
-      <Button Click="OnHangUp" IsVisible="{Binding IsOutgoing}"
-              Content="Cancel" Background="{DynamicResource AppInputBrush}" Foreground="#aaaaaa"
-              Padding="24,10" CornerRadius="20"
-              HorizontalAlignment="Center" Cursor="Hand"/>
-
     </StackPanel>
+
+    <!-- ── Status label when remote video is showing ─────────────────────── -->
+    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left"
+                Margin="16" IsVisible="{Binding HasRemoteVideo}" Spacing="4">
+      <TextBlock Text="{Binding RemoteName}" Foreground="White"
+                 FontSize="18" FontWeight="SemiBold"/>
+      <TextBlock Text="{Binding StatusText}" Foreground="#a78bfa" FontSize="12"/>
+    </StackPanel>
+
+    <!-- ── Local camera pip (bottom-right) ──────────────────────────────── -->
+    <Border Width="160" Height="120" CornerRadius="12" ClipToBounds="True"
+            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+            Margin="0,0,100,80"
+            BorderBrush="#8b5cf6" BorderThickness="2">
+      <Grid>
+        <Image Source="{Binding LocalFrame}" Stretch="UniformToFill"
+               IsVisible="{Binding IsCameraOn}"/>
+        <Border Background="#1a0a30"
+                IsVisible="{Binding IsCameraOff}">
+          <TextBlock Text="Camera off" Foreground="#888888" FontSize="11"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- ── Bottom controls overlay ───────────────────────────────────────── -->
+    <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+            Padding="0,20,0,28"
+            Background="#88080010">
+      <Panel>
+
+        <!-- Incoming: Accept / Decline -->
+        <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center"
+                    IsVisible="{Binding IsIncoming}">
+          <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <Button Click="OnDecline"
+                    Width="64" Height="64" CornerRadius="32" Padding="0"
+                    Background="#e74c3c" Cursor="Hand" BorderThickness="0">
+              <TextBlock Text="✕" Foreground="White" FontSize="24" FontWeight="Bold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Button>
+            <TextBlock Text="Decline" Foreground="#e74c3c" FontSize="12"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <Button Click="OnAccept"
+                    Width="64" Height="64" CornerRadius="32" Padding="0"
+                    Background="#2ecc71" Cursor="Hand" BorderThickness="0">
+              <TextBlock Text="✓" Foreground="White" FontSize="24" FontWeight="Bold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Button>
+            <TextBlock Text="Accept" Foreground="#2ecc71" FontSize="12"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Active call controls -->
+        <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center"
+                    IsVisible="{Binding IsCallActive}">
+
+          <!-- Mute -->
+          <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <Button Click="OnToggleMute"
+                    Width="56" Height="56" CornerRadius="28" Padding="0"
+                    Background="#2a1a4e" Cursor="Hand" BorderThickness="0">
+              <Grid>
+                <TextBlock Text="((" FontSize="14" FontWeight="Bold" Foreground="White"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           IsVisible="{Binding IsNotMuted}"/>
+                <TextBlock Text="||" FontSize="14" FontWeight="Bold" Foreground="#a78bfa"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           IsVisible="{Binding IsMuted}"/>
+              </Grid>
+            </Button>
+            <TextBlock Foreground="#888888" FontSize="11" HorizontalAlignment="Center"
+                       Text="Mute" IsVisible="{Binding IsNotMuted}"/>
+            <TextBlock Foreground="#a78bfa" FontSize="11" HorizontalAlignment="Center"
+                       Text="Unmute" IsVisible="{Binding IsMuted}"/>
+          </StackPanel>
+
+          <!-- Camera toggle -->
+          <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <Button Click="OnToggleCamera"
+                    Width="56" Height="56" CornerRadius="28" Padding="0"
+                    Background="#2a1a4e" Cursor="Hand" BorderThickness="0">
+              <Grid>
+                <TextBlock Text="[ ]" FontSize="13" FontWeight="Bold" Foreground="White"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           IsVisible="{Binding IsCameraOn}"/>
+                <TextBlock Text="[x]" FontSize="13" FontWeight="Bold" Foreground="#888888"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           IsVisible="{Binding IsCameraOff}"/>
+              </Grid>
+            </Button>
+            <TextBlock Foreground="#888888" FontSize="11" HorizontalAlignment="Center"
+                       Text="Camera"/>
+          </StackPanel>
+
+          <!-- Hang up -->
+          <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <Button Click="OnHangUp"
+                    Width="56" Height="56" CornerRadius="28" Padding="0"
+                    Background="#e74c3c" Cursor="Hand" BorderThickness="0">
+              <TextBlock Text="End" Foreground="White" FontSize="13" FontWeight="Bold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Button>
+            <TextBlock Text="End" Foreground="#888888" FontSize="11"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+
+        </StackPanel>
+
+        <!-- Outgoing: cancel -->
+        <Button Click="OnHangUp" IsVisible="{Binding IsOutgoing}"
+                Content="Cancel" Background="{DynamicResource AppInputBrush}" Foreground="#aaaaaa"
+                Padding="24,10" CornerRadius="20" BorderThickness="0"
+                HorizontalAlignment="Center" Cursor="Hand"/>
+
+      </Panel>
+    </Border>
+
   </Grid>
 </UserControl>

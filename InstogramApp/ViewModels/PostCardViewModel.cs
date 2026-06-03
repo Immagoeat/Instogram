@@ -32,14 +32,12 @@ public partial class PostCardViewModel : ViewModelBase
         var author = AppState.Instance.Accounts.GetById(Post.AuthorId);
         AuthorUsername    = author?.Username    ?? "unknown";
         AuthorDisplayName = author?.DisplayName ?? "Unknown";
-        AuthorInitial     = AuthorDisplayName.Length > 0
-                            ? AuthorDisplayName[0].ToString().ToUpper()
-                            : "?";
+        AuthorInitial     = Initial(AuthorDisplayName);
 
         var me = AppState.Instance.CurrentUser;
         var liked = me != null && Post.Likes.Contains(me.Id);
         LikeCount = Post.Likes.Count;
-        LikeLabel = liked ? $"♥ {LikeCount}" : $"♡ {LikeCount}";
+        LikeLabel = MakeLikeLabel(liked, LikeCount);
 
         CommentPreviews = Post.Comments
             .TakeLast(3)

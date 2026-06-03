@@ -10,7 +10,12 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <AvaloniaResource Include="Themes\**" />
+    <AvaloniaResource Include="Themes\Dark.axaml" />
+    <AvaloniaResource Include="Themes\Light.axaml" />
+    <AvaloniaResource Include="Themes\OceanBlue.axaml" />
+    <AvaloniaResource Include="Themes\OledBlack.axaml" />
+    <AvaloniaResource Include="Themes\PurpleNight.axaml" />
+    <AvaloniaResource Include="Themes\Sunset.axaml" />
     <Compile Include="../dependencies/InstogramDependencies.cs" />
   </ItemGroup>
 
@@ -26,6 +31,10 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.5" />
+    <PackageReference Include="Concentus" Version="2.2.2" />
     <PackageReference Include="PortAudioSharp2" Version="1.0.6" />
+    <PackageReference Include="SIPSorcery" Version="6.0.2" />
+    <PackageReference Include="SIPSorceryMedia.Abstractions" Version="1.2.0" />
+    <PackageReference Include="SIPSorceryMedia.FFmpeg" Version="1.3.0-pre" />
   </ItemGroup>
 </Project>

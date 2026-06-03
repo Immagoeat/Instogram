@@ -29,6 +29,9 @@ build_property.EnableCodeStyleSeverity =
 [/home/evan/Desktop/Instogram/InstogramApp/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[/home/evan/Desktop/Instogram/InstogramApp/Controls/AsyncImage.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [/home/evan/Desktop/Instogram/InstogramApp/Themes/Dark.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
@@ -90,6 +93,12 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [/home/evan/Desktop/Instogram/InstogramApp/Views/ProfileView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/evan/Desktop/Instogram/InstogramApp/Views/ServerProfileView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/evan/Desktop/Instogram/InstogramApp/Views/SettingsView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [/home/evan/Desktop/Instogram/InstogramApp/Views/StoryComposeView.axaml]

@@ -13,6 +13,11 @@ public class ViewLocator : IDataTemplate
     {
         if (param is null) return null;
 
+        // Special-case VMs that share a view
+        if (param is ServerPostCardViewModel)    return new Views.PostCardView();
+        if (param is ServerStoryViewerViewModel) return new Views.StoryViewerView();
+        if (param is FriendsViewModel)           return new Views.FriendRequestView();
+
         var vmName   = param.GetType().FullName!;
         var asmName  = param.GetType().Assembly.GetName().Name!;
         var viewName = vmName

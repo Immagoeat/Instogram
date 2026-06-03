@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:InstogramApp.ViewModels"
+             x:Class="InstogramApp.Views.SettingsView">
+
+  <ScrollViewer>
+    <StackPanel MaxWidth="580" HorizontalAlignment="Center" Margin="40,36" Spacing="0">
+
+      <TextBlock Text="Settings" Foreground="{DynamicResource AppTextBrush}"
+                 FontSize="26" FontWeight="Bold" Margin="0,0,0,32"/>
+
+      <!-- Audio -->
+      <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14"
+              BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+              Padding="24,20" Margin="0,0,0,16">
+        <StackPanel Spacing="20">
+
+          <TextBlock Text="Audio" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="16" FontWeight="SemiBold"/>
+
+          <StackPanel Spacing="8">
+            <TextBlock Text="Microphone" Foreground="#888888" FontSize="13"/>
+            <ComboBox ItemsSource="{Binding MicDevices}"
+                      SelectedItem="{Binding SelectedMic}"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource AppInputBrush}"
+                      Foreground="{DynamicResource AppTextBrush}"
+                      BorderBrush="{DynamicResource AppBorderBrush}"
+                      BorderThickness="1" CornerRadius="8" Padding="12,8">
+              <ComboBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:AudioDeviceViewModel}">
+                  <TextBlock Text="{Binding Name}" Foreground="{DynamicResource AppTextBrush}" FontSize="13"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Spacing="8">
+            <TextBlock Text="Speaker / Headphones" Foreground="#888888" FontSize="13"/>
+            <ComboBox ItemsSource="{Binding SpeakerDevices}"
+                      SelectedItem="{Binding SelectedSpeaker}"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource AppInputBrush}"
+                      Foreground="{DynamicResource AppTextBrush}"
+                      BorderBrush="{DynamicResource AppBorderBrush}"
+                      BorderThickness="1" CornerRadius="8" Padding="12,8">
+              <ComboBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:AudioDeviceViewModel}">
+                  <TextBlock Text="{Binding Name}" Foreground="{DynamicResource AppTextBrush}" FontSize="13"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Camera -->
+      <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14"
+              BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+              Padding="24,20" Margin="0,0,0,24">
+        <StackPanel Spacing="20">
+
+          <TextBlock Text="Camera" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="16" FontWeight="SemiBold"/>
+
+          <StackPanel Spacing="8">
+            <TextBlock Text="Camera device" Foreground="#888888" FontSize="13"/>
+            <ComboBox ItemsSource="{Binding CameraDevices}"
+                      SelectedItem="{Binding SelectedCamera}"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource AppInputBrush}"
+                      Foreground="{DynamicResource AppTextBrush}"
+                      BorderBrush="{DynamicResource AppBorderBrush}"
+                      BorderThickness="1" CornerRadius="8" Padding="12,8">
+              <ComboBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:CameraDeviceViewModel}">
+                  <TextBlock Text="{Binding Name}" Foreground="{DynamicResource AppTextBrush}" FontSize="13"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Save -->
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Click="OnSave" Content="Save Settings"
+                Background="#7c3aed" Foreground="White"
+                Padding="22,10" CornerRadius="10" FontSize="14" FontWeight="SemiBold"
+                Cursor="Hand" BorderThickness="0"/>
+        <TextBlock Text="{Binding StatusText}" Foreground="#a78bfa"
+                   FontSize="14" VerticalAlignment="Center"/>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

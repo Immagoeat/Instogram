@@ -15,7 +15,7 @@
     <conv:PathToBitmapConverter x:Key="PathToBitmap"/>
   </Window.Resources>
 
-  <Grid ColumnDefinitions="220,*">
+  <Grid ColumnDefinitions="228,*">
 
     <!-- Sidebar -->
     <Border Grid.Column="0" Background="{DynamicResource AppSurfaceBrush}"
@@ -23,49 +23,73 @@
       <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- Brand -->
-        <StackPanel Grid.Row="0" Margin="20,28,20,24" Spacing="4">
-          <TextBlock Text="Instogram" FontSize="22" FontWeight="Bold"
-                     Foreground="{DynamicResource AppTextBrush}" LetterSpacing="0.5"/>
-          <TextBlock Text="Share your world" FontSize="11"
+        <StackPanel Grid.Row="0" Margin="22,30,22,28" Spacing="3">
+          <TextBlock Text="Instogram" FontSize="24" FontWeight="Bold"
+                     Foreground="{DynamicResource AppTextBrush}" LetterSpacing="0.8"/>
+          <TextBlock Text="Share your world." FontSize="11"
                      Foreground="#444444" LetterSpacing="0.3"/>
         </StackPanel>
 
         <!-- Nav items -->
-        <StackPanel Grid.Row="1" Margin="12,0" Spacing="2">
+        <StackPanel Grid.Row="1" Margin="10,0" Spacing="1">
 
           <Button Click="NavHome" IsVisible="{Binding IsLoggedIn}"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="⌂" FontSize="18" Width="22" HorizontalAlignment="Center"/>
-              <TextBlock Text="Home" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="⌂" FontSize="17" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Home" VerticalAlignment="Center" FontSize="14"/>
             </StackPanel>
           </Button>
 
           <Button Click="NavExplore" IsVisible="{Binding IsLoggedIn}"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="⊕" FontSize="18" Width="22" HorizontalAlignment="Center"/>
-              <TextBlock Text="Explore" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="⊕" FontSize="17" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Explore" VerticalAlignment="Center" FontSize="14"/>
             </StackPanel>
           </Button>
 
           <Button Click="NavNewPost" IsVisible="{Binding IsLoggedIn}"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="＋" FontSize="18" Width="22" HorizontalAlignment="Center"/>
-              <TextBlock Text="New Post" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="＋" FontSize="17" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="New Post" VerticalAlignment="Center" FontSize="14"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavNewStory" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="◎" FontSize="17" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="New Story" VerticalAlignment="Center" FontSize="14"/>
             </StackPanel>
           </Button>
 
           <Button Click="NavMessages" IsVisible="{Binding IsLoggedIn}"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="✉" FontSize="16" Width="22" HorizontalAlignment="Center"/>
-              <TextBlock Text="Messages" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="✉" FontSize="15" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Messages" VerticalAlignment="Center" FontSize="14"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavFriendCall" IsVisible="{Binding IsLoggedIn}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="☎" FontSize="15" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Call" VerticalAlignment="Center" FontSize="14"/>
             </StackPanel>
           </Button>
 
@@ -73,13 +97,15 @@
           <Button Click="NavNotifications" IsVisible="{Binding IsLoggedIn}"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <Grid ColumnDefinitions="22,*,Auto">
-              <TextBlock Grid.Column="0" Text="🔔" FontSize="16" HorizontalAlignment="Center"/>
-              <TextBlock Grid.Column="1" Text="Notifications" VerticalAlignment="Center" Margin="12,0,0,0"/>
-              <Border Grid.Column="2" Background="#8b5cf6" CornerRadius="10"
-                      Padding="6,2" IsVisible="{Binding HasNotifications}"
+            <Grid ColumnDefinitions="20,*,Auto">
+              <TextBlock Grid.Column="0" Text="○" FontSize="14" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Text="Notifications" VerticalAlignment="Center"
+                         FontSize="14" Margin="14,0,0,0"/>
+              <Border Grid.Column="2" Background="#7c3aed" CornerRadius="10"
+                      Padding="7,2" IsVisible="{Binding HasNotifications}"
                       VerticalAlignment="Center">
-                <TextBlock Text="{Binding NotificationCount}" Foreground="{DynamicResource AppTextBrush}"
+                <TextBlock Text="{Binding NotificationCount}" Foreground="White"
                            FontSize="11" FontWeight="Bold"/>
               </Border>
             </Grid>
@@ -88,46 +114,59 @@
           <Button Click="NavFriends"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="👥" FontSize="15" Width="22" HorizontalAlignment="Center"/>
-              <TextBlock Text="Friends" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="⊞" FontSize="14" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Friends" VerticalAlignment="Center" FontSize="14"/>
+            </StackPanel>
+          </Button>
+
+          <Button Click="NavSettings"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Classes="navBtn">
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="⚙" FontSize="15" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Settings" VerticalAlignment="Center" FontSize="14"/>
             </StackPanel>
           </Button>
 
           <Button Click="NavProfile" IsVisible="{Binding IsLoggedIn}"
                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                   Classes="navBtn">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="◉" FontSize="16" Width="22" HorizontalAlignment="Center"/>
-              <TextBlock Text="Profile" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Text="◉" FontSize="15" Width="20" HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="Profile" VerticalAlignment="Center" FontSize="14"/>
             </StackPanel>
           </Button>
 
         </StackPanel>
 
         <!-- User card + logout -->
-        <Border Grid.Row="2" Margin="12,0,12,16" IsVisible="{Binding IsLoggedIn}">
-          <StackPanel Spacing="6">
-            <Border Height="1" Background="{DynamicResource AppBorderBrush}" Margin="4,0"/>
-            <Border Background="{DynamicResource AppCardBrush}" CornerRadius="10" Padding="12,10">
-              <Grid ColumnDefinitions="36,*,Auto">
+        <Border Grid.Row="2" Margin="10,0,10,16" IsVisible="{Binding IsLoggedIn}">
+          <StackPanel Spacing="8">
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}" Margin="6,0"/>
+            <Border Background="{DynamicResource AppCardBrush}" CornerRadius="12" Padding="12,10"
+                    BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+              <Grid ColumnDefinitions="38,*,Auto">
                 <!-- Avatar: photo or accent initial -->
-                <Grid Grid.Column="0" Width="32" Height="32">
-                  <Border CornerRadius="16" ClipToBounds="True"
-                          Width="32" Height="32"
+                <Grid Grid.Column="0" Width="34" Height="34">
+                  <Border CornerRadius="17" ClipToBounds="True"
+                          Width="34" Height="34"
                           IsVisible="{Binding SidebarHasAvatar}">
                     <Image Source="{Binding SidebarAvatarPath, Converter={StaticResource PathToBitmap}}"
-                           Stretch="UniformToFill" Width="32" Height="32"/>
+                           Stretch="UniformToFill" Width="34" Height="34"/>
                   </Border>
-                  <Border Width="32" Height="32" CornerRadius="16"
+                  <Border Width="34" Height="34" CornerRadius="17"
                           Background="{Binding SidebarAccent}"
                           IsVisible="{Binding SidebarHasNoAvatar}">
                     <TextBlock Text="{Binding LoggedInAs[1]}"
-                               Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold" FontSize="14"
+                               Foreground="White" FontWeight="Bold" FontSize="15"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                   </Border>
                 </Grid>
-                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="1">
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="2">
                   <TextBlock Text="{Binding LoggedInDisplay}" Foreground="{DynamicResource AppTextBrush}"
                              FontSize="13" FontWeight="SemiBold"
                              TextTrimming="CharacterEllipsis"/>
@@ -151,21 +190,21 @@
   <Window.Styles>
     <Style Selector="Button.navBtn">
       <Setter Property="Background" Value="#01000000"/>
-      <Setter Property="Foreground" Value="#999999"/>
+      <Setter Property="Foreground" Value="#888888"/>
       <Setter Property="FontSize" Value="14"/>
-      <Setter Property="Padding" Value="14,11"/>
+      <Setter Property="Padding" Value="14,12"/>
       <Setter Property="CornerRadius" Value="10"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="BorderThickness" Value="0"/>
     </Style>
     <Style Selector="Button.navBtn:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#181818"/>
-      <Setter Property="TextElement.Foreground" Value="White"/>
+      <Setter Property="Background" Value="#1c1c1c"/>
+      <Setter Property="TextElement.Foreground" Value="#f0f0f0"/>
     </Style>
     <Style Selector="Button.logoutBtn">
       <Setter Property="Background" Value="#01000000"/>
       <Setter Property="Foreground" Value="#555555"/>
-      <Setter Property="FontSize" Value="15"/>
+      <Setter Property="FontSize" Value="16"/>
       <Setter Property="Padding" Value="6,4"/>
       <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Cursor" Value="Hand"/>

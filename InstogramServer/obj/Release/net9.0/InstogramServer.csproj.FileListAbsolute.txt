@@ -158,3 +158,11 @@
 /home/evan/Desktop/Instogram/InstogramServer/obj/Release/net9.0/InstogramServer.pdb
 /home/evan/Desktop/Instogram/InstogramServer/obj/Release/net9.0/InstogramServer.genruntimeconfig.cache
 /home/evan/Desktop/Instogram/InstogramServer/obj/Release/net9.0/ref/InstogramServer.dll
+/tmp/instogram-server-build/appsettings.Development.json
+/tmp/instogram-server-build/appsettings.json
+/tmp/instogram-server-build/InstogramServer.staticwebassets.endpoints.json
+/tmp/instogram-server-build/InstogramServer
+/tmp/instogram-server-build/InstogramServer.deps.json
+/tmp/instogram-server-build/InstogramServer.runtimeconfig.json
+/tmp/instogram-server-build/InstogramServer.dll
+/tmp/instogram-server-build/InstogramServer.pdb

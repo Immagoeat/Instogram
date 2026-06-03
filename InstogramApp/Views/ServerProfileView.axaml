@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InstogramApp.Views.ServerProfileView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- Top bar -->
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="24,14"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Grid.Column="0" Click="OnBack" Content="← Back" Classes="backBtn"/>
+        <TextBlock Grid.Column="1" Text="{Binding Username, StringFormat='@{0}'}"
+                   Foreground="{DynamicResource AppTextBrush}" FontSize="16" FontWeight="SemiBold"
+                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1">
+      <StackPanel MaxWidth="700" HorizontalAlignment="Center" Margin="28,24" Spacing="16">
+
+        <!-- Loading -->
+        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}"
+                     Height="3" Foreground="#8b5cf6"
+                     Background="{DynamicResource AppInputBrush}" CornerRadius="2"/>
+
+        <!-- Profile card -->
+        <Border Background="{DynamicResource AppCardBrush}" CornerRadius="16" Padding="26"
+                BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+          <StackPanel Spacing="18">
+
+            <Grid ColumnDefinitions="80,*">
+              <!-- Avatar initials -->
+              <Border Grid.Column="0" Width="80" Height="80" CornerRadius="40"
+                      Background="{Binding AccentColor}">
+                <TextBlock Text="{Binding Initial}" Foreground="White" FontWeight="Bold" FontSize="36"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+
+              <!-- Info -->
+              <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center" Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding DisplayName}"
+                             Foreground="{DynamicResource AppTextBrush}"
+                             FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                  <Border Background="#1d4ed8" CornerRadius="5" Padding="6,2"
+                          IsVisible="{Binding IsMaster}" VerticalAlignment="Center">
+                    <TextBlock Text="MASTER" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                  </Border>
+                  <Border Background="#7c3aed" CornerRadius="5" Padding="6,2"
+                          IsVisible="{Binding IsVerified}" VerticalAlignment="Center">
+                    <TextBlock Text="✓ Verified" Foreground="White" FontSize="10" FontWeight="SemiBold"/>
+                  </Border>
+                </StackPanel>
+                <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
+                           Foreground="#666666" FontSize="14"/>
+                <TextBlock Text="{Binding Bio}" Foreground="#aaaaaa" FontSize="13"
+                           IsVisible="{Binding Bio,
+                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding Website}" Foreground="#7c3aed" FontSize="13"
+                           IsVisible="{Binding Website,
+                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- Stats row -->
+            <StackPanel Orientation="Horizontal" Spacing="32">
+              <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{Binding FollowerCount}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Followers" Foreground="#555555" FontSize="11"/>
+              </StackPanel>
+              <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{Binding FollowingCount}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Following" Foreground="#555555" FontSize="11"/>
+              </StackPanel>
+              <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{Binding Posts.Count}" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Posts" Foreground="#555555" FontSize="11"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Action buttons (other users only) -->
+            <StackPanel Orientation="Horizontal" Spacing="10"
+                        IsVisible="{Binding !IsOwnProfile}">
+              <Button Click="OnToggleFollow" Content="{Binding FollowLabel}"
+                      Classes="followBtn"/>
+              <Button Click="OnSendFriendRequest" Content="{Binding FriendRequestLabel}"
+                      Classes="messageBtn" IsEnabled="{Binding !FriendRequestSent}"/>
+              <Button Click="OnMessage" Content="Message" Classes="messageBtn"/>
+              <Button Click="OnCall" Content="Call" Classes="callBtn"/>
+              <Button Click="OnToggleVerify" Content="{Binding VerifyLabel}"
+                      Classes="verifyBtn" IsVisible="{Binding CanVerify}"/>
+            </StackPanel>
+
+          </StackPanel>
+        </Border>
+
+        <!-- Posts grid -->
+        <TextBlock Text="Posts" Foreground="{DynamicResource AppTextBrush}"
+                   FontSize="16" FontWeight="SemiBold" Margin="4,0,0,0"/>
+        <TextBlock Text="No posts yet."
+                   Foreground="#444444" FontSize="13" HorizontalAlignment="Center"
+                   Margin="0,20"
+                   IsVisible="{Binding Posts.Count, Converter={x:Static ObjectConverters.IsNull}}"/>
+        <ItemsControl ItemsSource="{Binding Posts}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ContentControl Content="{Binding}"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.backBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="14,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.followBtn">
+      <Setter Property="Background" Value="#7c3aed"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="20,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.followBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#6d28d9"/>
+    </Style>
+    <Style Selector="Button.messageBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="20,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.callBtn">
+      <Setter Property="Background" Value="#166534"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="20,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.callBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#14532d"/>
+    </Style>
+    <Style Selector="Button.verifyBtn">
+      <Setter Property="Background" Value="#1d4ed8"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="20,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.verifyBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1e40af"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

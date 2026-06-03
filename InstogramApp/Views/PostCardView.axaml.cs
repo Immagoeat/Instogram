@@ -7,8 +7,8 @@ namespace InstogramApp.Views;
 public partial class PostCardView : UserControl
 {
     public PostCardView() => InitializeComponent();
-    PostCardViewModel VM => (PostCardViewModel)DataContext!;
-    void OnViewProfile(object? s, RoutedEventArgs e) => VM.ViewAuthorProfileCommand.Execute(null);
-    void OnLike(object? s, RoutedEventArgs e)        => VM.ToggleLikeCommand.Execute(null);
-    void OnAddComment(object? s, RoutedEventArgs e)  => VM.AddCommentCommand.Execute(null);
+    ServerPostCardViewModel VM => (ServerPostCardViewModel)DataContext!;
+    void OnLike(object? s, RoutedEventArgs e)         => VM.ToggleLikeCommand.Execute(null);
+    void OnAddComment(object? s, RoutedEventArgs e)   => VM.AddCommentCommand.Execute(null);
+    void OnOpenAuthor(object? s, RoutedEventArgs e)   => VM.OpenAuthorProfileCommand.Execute(null);
 }

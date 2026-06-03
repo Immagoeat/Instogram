@@ -19,4 +19,9 @@
   <SolidColorBrush x:Key="AppAccentBrush"  Color="{StaticResource AppAccent}"/>
   <SolidColorBrush x:Key="AppAccentDimBrush" Color="{StaticResource AppAccentDim}"/>
   <SolidColorBrush x:Key="AppInputBrush"   Color="{StaticResource AppInput}"/>
+  <!-- Override FluentTheme TextBox state backgrounds to kill watermark highlight -->
+  <SolidColorBrush x:Key="TextControlBackground"              Color="{StaticResource AppInput}"/>
+  <SolidColorBrush x:Key="TextControlBackgroundPointerOver"   Color="{StaticResource AppInput}"/>
+  <SolidColorBrush x:Key="TextControlBackgroundFocused"       Color="{StaticResource AppInput}"/>
+  <SolidColorBrush x:Key="TextControlBackgroundDisabled"      Color="{StaticResource AppInput}"/>
 </ResourceDictionary>

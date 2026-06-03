@@ -30,9 +30,10 @@
     <!-- Crop canvas area — fills available space -->
     <Grid Grid.Row="1" Name="CanvasHost" Background="#111111"
           ClipToBounds="True">
-      <!-- Source image, scaled to fit, centred -->
+      <!-- Source image, scaled to fit, centred — no hit testing so canvas gets events -->
       <Image Name="SourceImage" Stretch="Uniform"
-             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+             HorizontalAlignment="Center" VerticalAlignment="Center"
+             IsHitTestVisible="False"/>
 
       <!-- Overlay canvas drawn by code-behind -->
       <Canvas Name="OverlayCanvas"

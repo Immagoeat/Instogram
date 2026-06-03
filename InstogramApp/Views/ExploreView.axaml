@@ -4,39 +4,307 @@
 
   <Grid RowDefinitions="Auto,*">
 
-    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="24,14"
+    <!-- ── Top bar with search ───────────────────────────────────────────── -->
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="24,16"
             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Grid.Column="0" Spacing="2">
-          <TextBlock Text="Explore" Foreground="{DynamicResource AppTextBrush}" FontSize="20" FontWeight="Bold"/>
-          <TextBlock Text="Trending across Instogram" Foreground="#444444" FontSize="12"/>
+      <StackPanel Spacing="14">
+
+        <!-- Title row -->
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Grid.Column="0" Spacing="2">
+            <TextBlock Text="Explore" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="22" FontWeight="Bold"/>
+            <TextBlock Text="Search posts, people, and tags"
+                       Foreground="#555555" FontSize="12"/>
+          </StackPanel>
+          <Button Grid.Column="1" Click="OnRefresh" Content="↻  Refresh"
+                  Classes="tabBtn" VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- Search box -->
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBox Grid.Column="0"
+                   Text="{Binding Query}"
+                   PlaceholderText="Search posts, people, #tags…"
+                   Classes="searchBox"/>
+          <Border Grid.Column="1" Background="{DynamicResource AppInputBrush}"
+                  CornerRadius="0,10,10,0" Padding="14,0" Margin="-2,0,0,0"
+                  VerticalAlignment="Stretch">
+            <TextBlock Text="⌕" Foreground="#666666" FontSize="18"
+                       VerticalAlignment="Center"/>
+          </Border>
+        </Grid>
+
+        <!-- Tab switcher -->
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Button Click="OnSwitchToPosts"  Classes="tabSwitchBtn"
+                  Content="Posts"
+                  Tag="{Binding IsPostsTab}"/>
+          <Button Click="OnSwitchToPeople" Classes="tabSwitchBtn"
+                  Content="People"
+                  Tag="{Binding IsPeopleTab}"/>
         </StackPanel>
-        <Button Grid.Column="1" Click="DoRefresh" Content="↻ Refresh"
-                Classes="tabBtn" VerticalAlignment="Center"/>
-      </Grid>
+
+      </StackPanel>
     </Border>
 
-    <ScrollViewer Grid.Row="1" Padding="28,20">
-      <ItemsControl ItemsSource="{Binding Posts}" MaxWidth="680" HorizontalAlignment="Center">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <ContentControl Content="{Binding}"/>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+    <!-- ── Content area ──────────────────────────────────────────────────── -->
+    <ScrollViewer Grid.Row="1" Padding="28,20,28,28">
+      <StackPanel MaxWidth="700" HorizontalAlignment="Center" Spacing="0">
+
+        <!-- ── POSTS tab ──────────────────────────────────────────────── -->
+        <StackPanel IsVisible="{Binding IsPostsTab}" Spacing="0">
+
+          <!-- Active tag filter pill -->
+          <Border IsVisible="{Binding ActiveTagFilter,
+                  Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                  Background="#1e1040" CornerRadius="10"
+                  BorderBrush="#4c1d95" BorderThickness="1"
+                  Padding="14,10" Margin="0,0,0,16">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Filtering by" Foreground="#888888" FontSize="13"
+                           VerticalAlignment="Center"/>
+                <Border Background="#2d1070" CornerRadius="6" Padding="8,3">
+                  <TextBlock Text="{Binding ActiveTagFilter, StringFormat='#{0}'}"
+                             Foreground="#a78bfa" FontSize="13" FontWeight="SemiBold"/>
+                </Border>
+              </StackPanel>
+              <Button Grid.Column="1" Click="OnClearTagFilter"
+                      Content="✕ Clear" Classes="clearFilterBtn"/>
+            </Grid>
+          </Border>
+
+          <!-- Trending tags section -->
+          <StackPanel IsVisible="{Binding ShowTrending}" Spacing="12" Margin="0,0,0,24">
+            <TextBlock Text="TRENDING" Foreground="#555555" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="0.8"/>
+            <ItemsControl ItemsSource="{Binding TrendingTags}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Click="OnFilterByTag" Tag="{Binding}"
+                          Classes="trendingChip" Margin="0,0,8,8">
+                    <StackPanel Spacing="2">
+                      <TextBlock Text="{Binding Label}"
+                                 Foreground="#a78bfa" FontSize="13" FontWeight="SemiBold"/>
+                      <TextBlock Text="{Binding CountLabel}"
+                                 Foreground="#555555" FontSize="11"/>
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}" Opacity="0.5"
+                    Margin="0,4,0,0"/>
+          </StackPanel>
+
+          <!-- Post loading spinner -->
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoadingPosts}"
+                       Height="3" Foreground="#8b5cf6"
+                       Background="{DynamicResource AppInputBrush}"
+                       CornerRadius="2" Margin="0,0,0,16"/>
+
+          <!-- No results -->
+          <StackPanel IsVisible="{Binding NoPostResults}" HorizontalAlignment="Center"
+                      Spacing="10" Margin="0,60">
+            <TextBlock Text="✦" FontSize="28" Foreground="#2a2a2a" HorizontalAlignment="Center"/>
+            <TextBlock Text="No posts found" Foreground="#3a3a3a"
+                       FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <TextBlock Text="Try a different search or tag."
+                       Foreground="#2e2e2e" FontSize="13" HorizontalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Post cards -->
+          <ItemsControl ItemsSource="{Binding Posts}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <ContentControl Content="{Binding}"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+        </StackPanel>
+
+        <!-- ── PEOPLE tab ─────────────────────────────────────────────── -->
+        <StackPanel IsVisible="{Binding IsPeopleTab}" Spacing="0">
+
+          <!-- Loading spinner -->
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoadingPeople}"
+                       Height="3" Foreground="#8b5cf6"
+                       Background="{DynamicResource AppInputBrush}"
+                       CornerRadius="2" Margin="0,0,0,16"/>
+
+          <!-- Empty state when no query yet -->
+          <StackPanel IsVisible="{Binding !IsLoadingPeople}" Spacing="10" Margin="0,60"
+                      HorizontalAlignment="Center">
+            <TextBlock Text="Search for people above" Foreground="#333333"
+                       FontSize="14" HorizontalAlignment="Center"
+                       IsVisible="{Binding !NoPeopleResults}"/>
+          </StackPanel>
+
+          <!-- No results -->
+          <StackPanel IsVisible="{Binding NoPeopleResults}" HorizontalAlignment="Center"
+                      Spacing="10" Margin="0,60">
+            <TextBlock Text="— — —" FontSize="18" Foreground="#333333" HorizontalAlignment="Center"/>
+            <TextBlock Text="No users found" Foreground="#3a3a3a"
+                       FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <TextBlock Text="Try searching by username or display name."
+                       Foreground="#2e2e2e" FontSize="13" HorizontalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- User rows -->
+          <ItemsControl ItemsSource="{Binding People}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Background="{DynamicResource AppCardBrush}" CornerRadius="12"
+                        Margin="0,0,0,10" Padding="16,14"
+                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
+                  <Grid ColumnDefinitions="46,*,Auto">
+
+                    <!-- Avatar -->
+                    <Border Grid.Column="0" Width="42" Height="42" CornerRadius="21"
+                            Background="{Binding AccentColor}" Cursor="Hand">
+                      <TextBlock Text="{Binding Initial}" Foreground="White"
+                                 FontWeight="Bold" FontSize="18"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Name / username -->
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center"
+                                Spacing="2">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding DisplayName}"
+                                   Foreground="{DynamicResource AppTextBrush}"
+                                   FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+                        <Border Background="#1d4ed8" CornerRadius="4" Padding="5,1"
+                                IsVisible="{Binding IsMaster}" VerticalAlignment="Center">
+                          <TextBlock Text="MASTER" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                        </Border>
+                        <Border Background="#7c3aed" CornerRadius="4" Padding="5,1"
+                                IsVisible="{Binding IsVerified}" VerticalAlignment="Center">
+                          <TextBlock Text="✓" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                        </Border>
+                      </StackPanel>
+                      <TextBlock Text="{Binding AtUsername}"
+                                 Foreground="#555555" FontSize="13"/>
+                    </StackPanel>
+
+                    <!-- Actions -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center">
+                      <Button Click="OnOpenProfile" Tag="{Binding}"
+                              Content="View" Classes="viewProfileBtn"/>
+                      <Button Click="OnToggleFollow" Tag="{Binding}"
+                              Content="{Binding FollowLabel}"
+                              Classes="followBtn"/>
+                    </StackPanel>
+
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+        </StackPanel>
+
+      </StackPanel>
     </ScrollViewer>
 
   </Grid>
 
   <UserControl.Styles>
+    <Style Selector="TextBox.searchBox">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="16,11"/>
+      <Setter Property="CornerRadius" Value="10,0,0,10"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="TextBox.searchBox /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.searchBox:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.searchBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.searchBox:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.searchBox /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
     <Style Selector="Button.tabBtn">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="Foreground" Value="#aaaaaa"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
       <Setter Property="FontSize" Value="13"/>
-      <Setter Property="Padding" Value="14,7"/>
-      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="16,8"/>
+      <Setter Property="CornerRadius" Value="9"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.tabSwitchBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="18,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <!-- Active tab: Tag=True means active (bound above) — handled in code-behind -->
+    <Style Selector="Button.trendingChip">
+      <Setter Property="Background" Value="#110a28"/>
+      <Setter Property="BorderBrush" Value="#2d1a5e"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Padding" Value="14,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.trendingChip:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1e1040"/>
+    </Style>
+    <Style Selector="Button.followBtn">
+      <Setter Property="Background" Value="#7c3aed"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="14,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.followBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#6d28d9"/>
+    </Style>
+    <Style Selector="Button.viewProfileBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="14,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.clearFilterBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="Foreground" Value="#7c3aed"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="8,4"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

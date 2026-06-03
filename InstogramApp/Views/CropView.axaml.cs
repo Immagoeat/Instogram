@@ -82,16 +82,14 @@ public partial class CropView : UserControl
         c.PointerMoved    += OnPointerMoved;
         c.PointerReleased += OnPointerReleased;
 
-        // We need to know the layout size — defer to next frame
-        c.LayoutUpdated += OnFirstLayout;
+        // SizeChanged fires once real bounds are known (reliable vs LayoutUpdated)
+        c.SizeChanged += OnCanvasSizeChanged;
     }
 
-    private bool _layoutDone;
-    private void OnFirstLayout(object? sender, EventArgs e)
+    private void OnCanvasSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        if (_layoutDone) return;
-        _layoutDone = true;
-        OverlayCanvas.LayoutUpdated -= OnFirstLayout;
+        if (e.NewSize.Width <= 0 || e.NewSize.Height <= 0) return;
+        OverlayCanvas.SizeChanged -= OnCanvasSizeChanged;
         RecalcLayout();
         Redraw();
     }

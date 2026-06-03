@@ -10,7 +10,8 @@ public partial class CropViewModel : ViewModelBase
 {
     private readonly MainWindowViewModel _main;
     private readonly string              _sourcePath;
-    private readonly Action<string>      _onConfirm; // called with path of cropped file
+    private readonly Action<string>      _onConfirm;  // called with path; must also navigate away
+    private readonly Action              _onCancel;   // navigate back without changes
 
     // The loaded source bitmap — read by the View
     public Bitmap? SourceBitmap { get; }
@@ -22,11 +23,13 @@ public partial class CropViewModel : ViewModelBase
 
     [ObservableProperty] private string _statusText = "Drag to reposition · handles to resize";
 
-    public CropViewModel(MainWindowViewModel main, string sourcePath, Action<string> onConfirm)
+    public CropViewModel(MainWindowViewModel main, string sourcePath,
+        Action<string> onConfirm, Action onCancel)
     {
-        _main       = main;
+        _main      = main;
         _sourcePath = sourcePath;
         _onConfirm  = onConfirm;
+        _onCancel   = onCancel;
 
         try { SourceBitmap = new Bitmap(sourcePath); }
         catch { }
@@ -45,7 +48,7 @@ public partial class CropViewModel : ViewModelBase
     [RelayCommand]
     void Confirm()
     {
-        if (SourceBitmap == null) { _main.Navigate(new EditProfileViewModel(_main)); return; }
+        if (SourceBitmap == null) { _onCancel(); return; }
 
         try
         {
@@ -60,32 +63,29 @@ public partial class CropViewModel : ViewModelBase
             py = Math.Clamp(py, 0, srcH - 1);
             ps = Math.Clamp(ps, 1, Math.Min(srcW - px, srcH - py));
 
-            // Render the crop region into a 400×400 bitmap
             const int outSize = 400;
-            var renderBitmap = new RenderTargetBitmap(new Avalonia.PixelSize(outSize, outSize), new Avalonia.Vector(96, 96));
+            var renderBitmap = new RenderTargetBitmap(
+                new Avalonia.PixelSize(outSize, outSize), new Avalonia.Vector(96, 96));
 
             using var ctx = renderBitmap.CreateDrawingContext();
-            var srcRect = new Avalonia.Rect(px, py, ps, ps);
-            var dstRect = new Avalonia.Rect(0, 0, outSize, outSize);
-            ctx.DrawImage(SourceBitmap, srcRect, dstRect);
+            ctx.DrawImage(SourceBitmap,
+                new Avalonia.Rect(px, py, ps, ps),
+                new Avalonia.Rect(0, 0, outSize, outSize));
 
-            // Save to avatars folder next to the app
             var dir = Path.Combine(AppContext.BaseDirectory, "avatars");
             Directory.CreateDirectory(dir);
             var outPath = Path.Combine(dir, $"avatar_{Guid.NewGuid():N}.png");
             renderBitmap.Save(outPath);
 
+            // Callback handles navigation
             _onConfirm(outPath);
         }
         catch (Exception ex)
         {
             StatusText = $"Crop failed: {ex.Message}";
-            return;
         }
-
-        _main.Navigate(new EditProfileViewModel(_main));
     }
 
     [RelayCommand]
-    void Cancel() => _main.Navigate(new EditProfileViewModel(_main));
+    void Cancel() => _onCancel();
 }

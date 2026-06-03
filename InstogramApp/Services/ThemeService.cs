@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
@@ -20,9 +21,23 @@ public static class ThemeService
         [Theme.Sunset]     = "avares://InstogramApp/Themes/Sunset.axaml",
     };
 
+    private static readonly string _themePath =
+        Path.Combine(AppContext.BaseDirectory, "theme.txt");
+
     public static Theme Current { get; private set; } = Theme.Dark;
 
     private static Avalonia.Controls.ResourceDictionary? _currentDict;
+
+    public static Theme LoadSaved()
+    {
+        try
+        {
+            if (!File.Exists(_themePath)) return Theme.Dark;
+            var name = File.ReadAllText(_themePath).Trim();
+            return Enum.TryParse<Theme>(name, out var t) ? t : Theme.Dark;
+        }
+        catch { return Theme.Dark; }
+    }
 
     public static void Apply(Theme theme)
     {
@@ -35,6 +50,8 @@ public static class ThemeService
         merged.Add(dict);
         _currentDict = dict;
         Current = theme;
+
+        try { File.WriteAllText(_themePath, theme.ToString()); } catch { }
     }
 
     public static IEnumerable<(Theme theme, string label)> All() =>

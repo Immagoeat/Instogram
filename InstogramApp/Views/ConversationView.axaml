@@ -8,21 +8,24 @@
     <!-- Header -->
     <Border Grid.Row="0" Background="#111111" Padding="16,12"
             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
-      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-        <Button Click="OnBack" Classes="ghostBtn" Content="←" FontSize="18"/>
-        <Border Width="38" Height="38" CornerRadius="19" Background="#8b5cf6">
-          <TextBlock Text="{Binding AvatarLetter}" Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold"
-                     FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </Border>
-        <Button Click="OnViewProfile" Classes="ghostBtn" Padding="0">
-          <StackPanel Spacing="1">
-            <TextBlock Text="{Binding Partner.DisplayName}" Foreground="{DynamicResource AppTextBrush}"
-                       FontWeight="SemiBold" FontSize="14"/>
-            <TextBlock Text="{Binding Partner.Username, StringFormat='@{0}'}"
-                       Foreground="#777777" FontSize="12"/>
-          </StackPanel>
-        </Button>
-      </StackPanel>
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Button Click="OnBack" Classes="ghostBtn" Content="←" FontSize="18"/>
+          <Border Width="38" Height="38" CornerRadius="19" Background="#8b5cf6">
+            <TextBlock Text="{Binding AvatarLetter}" Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold"
+                       FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <Button Click="OnViewProfile" Classes="ghostBtn" Padding="0">
+            <StackPanel Spacing="1">
+              <TextBlock Text="{Binding Partner.DisplayName}" Foreground="{DynamicResource AppTextBrush}"
+                         FontWeight="SemiBold" FontSize="14"/>
+              <TextBlock Text="{Binding Partner.Username, StringFormat='@{0}'}"
+                         Foreground="#777777" FontSize="12"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <Button Grid.Column="1" Click="OnCall" Classes="callHeaderBtn" Content="Call"/>
+      </Grid>
     </Border>
 
     <!-- Message bubbles -->
@@ -88,6 +91,40 @@
       <Setter Property="Padding" Value="14,10"/>
       <Setter Property="CornerRadius" Value="22"/>
       <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="TextBox.composeInput /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.composeInput:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.composeInput:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.composeInput:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.composeInput /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="Button.callHeaderBtn">
+      <Setter Property="Background" Value="#166534"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="16,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
     </Style>
     <Style Selector="Button.sendBtn">
       <Setter Property="Background" Value="#8b5cf6"/>

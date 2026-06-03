@@ -99,6 +99,9 @@ public partial class ConversationViewModel : ViewModelBase
 
     [RelayCommand]
     void ViewProfile() => _main.Navigate(new ProfileViewModel(_main, Partner));
+
+    [RelayCommand]
+    void StartCall() => _main.Navigate(new CallViewModel(_main, Partner.Id, Partner.DisplayName));
 }
 
 // Inbox / conversation list

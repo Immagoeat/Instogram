@@ -7,11 +7,11 @@ namespace InstogramApp.Views;
 public partial class FriendRequestView : UserControl
 {
     public FriendRequestView() => InitializeComponent();
-    FriendRequestViewModel VM => (FriendRequestViewModel)DataContext!;
+    FriendsViewModel VM => (FriendsViewModel)DataContext!;
 
-    void OnBack(object? s, RoutedEventArgs e)        => VM.BackCommand.Execute(null);
-    void OnIncomingTab(object? s, RoutedEventArgs e)  => VM.ShowIncomingTabCommand.Execute(null);
-    void OnOutgoingTab(object? s, RoutedEventArgs e)  => VM.ShowOutgoingTabCommand.Execute(null);
+    void OnFriendsTab(object? s, RoutedEventArgs e)  => VM.ShowFriendsTabCommand.Execute(null);
+    void OnIncomingTab(object? s, RoutedEventArgs e) => VM.ShowIncomingTabCommand.Execute(null);
+    void OnOutgoingTab(object? s, RoutedEventArgs e) => VM.ShowOutgoingTabCommand.Execute(null);
 
     void OnAccept(object? s, RoutedEventArgs e)
     {
@@ -23,5 +23,23 @@ public partial class FriendRequestView : UserControl
     {
         if (s is Button btn && btn.Tag is FriendRequestRowViewModel row)
             VM.DeclineCommand.Execute(row);
+    }
+
+    void OnFriendCall(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is FriendRowViewModel row)
+            VM.CallCommand.Execute(row);
+    }
+
+    void OnFriendMessage(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is FriendRowViewModel row)
+            VM.MessageCommand.Execute(row);
+    }
+
+    void OnFriendProfile(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is FriendRowViewModel row)
+            VM.OpenProfileCommand.Execute(row);
     }
 }

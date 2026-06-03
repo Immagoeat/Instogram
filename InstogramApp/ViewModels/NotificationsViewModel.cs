@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,7 +6,7 @@ using InstogramApp.Services;
 
 namespace InstogramApp.ViewModels;
 
-public class NotificationRowViewModel
+public class NotificationRowViewModel : ViewModelBase
 {
     public string Body    { get; }
     public string Time    { get; }
@@ -19,6 +18,7 @@ public class NotificationRowViewModel
     {
         Body   = n.Body;
         IsRead = n.IsRead;
+        Time   = FormatAge(n.CreatedAt);
         Icon   = n.Type switch
         {
             "dm"      => "✉",
@@ -29,12 +29,6 @@ public class NotificationRowViewModel
             "friend"  => "👋",
             _         => "🔔"
         };
-        var age = DateTime.UtcNow - n.CreatedAt;
-        Time = age.TotalMinutes < 1  ? "just now"
-             : age.TotalHours   < 1  ? $"{(int)age.TotalMinutes}m ago"
-             : age.TotalDays    < 1  ? $"{(int)age.TotalHours}h ago"
-             : age.TotalDays    < 7  ? $"{(int)age.TotalDays}d ago"
-             : n.CreatedAt.ToLocalTime().ToString("MMM d");
     }
 }
 
@@ -68,8 +62,7 @@ public partial class NotificationsViewModel : ViewModelBase
 
             HasNotifications = Items.Count > 0;
 
-            _main.NotificationCount = 0;
-            _main.HasNotifications  = false;
+            _main.ClearNotificationBadge();
         }
         catch { }
         finally { IsLoading = false; }

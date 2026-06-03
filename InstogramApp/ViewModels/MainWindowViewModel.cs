@@ -1,3 +1,4 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InstogramApp.Services;
@@ -8,19 +9,21 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     [ObservableProperty] private ViewModelBase _currentPage;
     [ObservableProperty] private bool   _isLoggedIn;
-    [ObservableProperty] private bool   _isNotLoggedIn = true;
     [ObservableProperty] private string _loggedInAs      = "";
     [ObservableProperty] private string _loggedInDisplay = "";
 
-    // Notification badge
     [ObservableProperty] private int  _notificationCount;
-    [ObservableProperty] private bool _hasNotifications;
+
+    public bool IsNotLoggedIn   => !IsLoggedIn;
+    public bool HasNotifications => NotificationCount > 0;
 
     // Sidebar avatar
     [ObservableProperty] private string _sidebarAvatarPath  = "";
     [ObservableProperty] private string _sidebarAccent      = "#8b5cf6";
     [ObservableProperty] private bool   _sidebarHasAvatar;
     [ObservableProperty] private bool   _sidebarHasNoAvatar = true;
+
+    private bool _handlersRegistered;
 
     public MainWindowViewModel()
     {
@@ -31,24 +34,36 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void OnServerLogin(string username, string displayName)
     {
-        IsLoggedIn = true; IsNotLoggedIn = false;
+        IsLoggedIn = true;
+        OnPropertyChanged(nameof(IsNotLoggedIn));
         LoggedInAs      = $"@{username}";
         LoggedInDisplay = displayName;
-        NotificationCount = 0; HasNotifications = false;
+        NotificationCount = 0;
+        OnPropertyChanged(nameof(HasNotifications));
         RefreshSidebarAvatar();
 
-        ServerClient.Instance.OnNotificationCount += count =>
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                NotificationCount = count;
-                HasNotifications  = count > 0;
-            });
+        if (!_handlersRegistered)
+        {
+            _handlersRegistered = true;
+            ServerClient.Instance.OnNotificationCount += count =>
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    NotificationCount = count;
+                    OnPropertyChanged(nameof(HasNotifications));
+                });
 
-        ServerClient.Instance.OnIncomingCall += (callerId, callerName, sdpOffer) =>
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                Navigate(new CallViewModel(this, callerId, callerName, sdpOffer)));
+            ServerClient.Instance.OnIncomingCall += (callerId, callerName, sdpOffer) =>
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    Navigate(new CallViewModel(this, callerId, callerName, sdpOffer)));
+        }
 
         Navigate(new FeedViewModel(this));
+    }
+
+    public void ClearNotificationBadge()
+    {
+        NotificationCount = 0;
+        OnPropertyChanged(nameof(HasNotifications));
     }
 
     public void RefreshSidebarAvatar()
@@ -67,19 +82,29 @@ public partial class MainWindowViewModel : ViewModelBase
         AppState.Instance.IsServerMode = false;
         AppState.Instance.CurrentUser  = null;
         ServerConfig.Clear();
-        IsLoggedIn = false; IsNotLoggedIn = true;
+        IsLoggedIn = false;
+        OnPropertyChanged(nameof(IsNotLoggedIn));
         LoggedInAs = ""; LoggedInDisplay = "";
-        NotificationCount = 0; HasNotifications = false;
+        NotificationCount = 0;
+        OnPropertyChanged(nameof(HasNotifications));
         Navigate(new AuthViewModel(this));
     }
 
     [RelayCommand] void GoFeed()          => Navigate(new FeedViewModel(this));
     [RelayCommand] void GoExplore()       => Navigate(new ExploreViewModel(this));
     [RelayCommand] void GoNewPost()       => Navigate(new NewPostViewModel(this));
-    [RelayCommand] void GoProfile()       => Navigate(new ProfileViewModel(this, AppState.Instance.CurrentUser!));
+    [RelayCommand] void GoProfile()
+    {
+        if (AppState.Instance.IsServerMode &&
+            Guid.TryParse(AppState.Instance.ServerUserId, out var myId))
+            Navigate(new ServerProfileViewModel(this, myId));
+        else
+            Navigate(new ProfileViewModel(this, AppState.Instance.CurrentUser!));
+    }
     [RelayCommand] void GoDMs()           => Navigate(new DMListViewModel(this));
     [RelayCommand] void GoNotifications() => Navigate(new NotificationsViewModel(this));
     [RelayCommand] void GoNewStory()      => Navigate(new StoryComposeViewModel(this));
-    [RelayCommand] void GoFriends()       => Navigate(new FriendRequestViewModel(this));
+    [RelayCommand] void GoFriends()       => Navigate(new FriendsViewModel(this));
+    [RelayCommand] void GoSettings()      => Navigate(new SettingsViewModel(this));
     [RelayCommand] void Logout()          => OnLogout();
 }

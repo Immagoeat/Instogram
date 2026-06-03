@@ -67,11 +67,21 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ── Shared directories (declared early so all route groups can use them) ──────
+var imageDir = app.Configuration["ImageDir"]
+    ?? Path.Combine(AppContext.BaseDirectory, "images");
+Directory.CreateDirectory(imageDir);
+
+var avatarDir = app.Configuration["AvatarDir"]
+    ?? Path.Combine(AppContext.BaseDirectory, "avatars");
+Directory.CreateDirectory(avatarDir);
+
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 static object UserDto(User u) => new
 {
     u.Id, u.Username, u.DisplayName, u.Bio, u.Website,
-    u.AccentColor, u.AvatarUrl, u.Email, u.Phone, u.Address, u.CreatedAt
+    u.AccentColor, u.AvatarUrl, u.Email, u.Phone, u.Address,
+    u.IsVerified, u.IsMaster, u.CreatedAt
 };
 
 static object PostDto(Post p, Guid me) => new
@@ -80,7 +90,7 @@ static object PostDto(Post p, Guid me) => new
     AuthorUsername = p.Author.Username,
     AuthorDisplayName = p.Author.DisplayName,
     AuthorAccent = p.Author.AccentColor,
-    p.Caption, p.Tags, p.CreatedAt,
+    p.Caption, p.Tags, p.ImageUrl, p.CreatedAt,
     LikeCount   = p.Likes.Count,
     IsLiked     = p.Likes.Any(l => l.UserId == me),
     Comments    = p.Comments.OrderBy(c => c.CreatedAt).Select(c => new
@@ -89,6 +99,18 @@ static object PostDto(Post p, Guid me) => new
         AuthorUsername = c.Author.Username,
         c.Text, c.CreatedAt
     })
+};
+
+static object StoryDto(Story s, User author, bool hasSeen) => new
+{
+    s.Id, s.AuthorId,
+    AuthorUsername    = author.Username,
+    AuthorDisplayName = author.DisplayName,
+    AuthorAccent      = author.AccentColor,
+    s.Text, s.BackgroundColor, s.ImageUrl,
+    s.TextX, s.TextY, s.TextScale, s.TextRotation, s.TaggedUsers,
+    s.CreatedAt, s.ExpiresAt,
+    HasSeen = hasSeen
 };
 
 static object ConvDto(Conversation c, Guid me) => new
@@ -116,13 +138,14 @@ var auth = app.MapGroup("/auth");
 
 auth.MapPost("/register", async (RegisterRequest req, AppDbContext db, TokenService tokens) =>
 {
-    if (await db.Users.AnyAsync(u => u.Username == req.Username))
+    var normalized = req.Username.Trim().ToLowerInvariant();
+    if (await db.Users.AnyAsync(u => u.Username.ToLower() == normalized))
         return Results.Conflict("Username taken");
 
     var user = new User
     {
-        Username    = req.Username.Trim(),
-        DisplayName = req.DisplayName.Trim(),
+        Username     = normalized,
+        DisplayName  = req.DisplayName.Trim(),
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
         Email   = req.Email,
         Phone   = req.Phone,
@@ -135,7 +158,8 @@ auth.MapPost("/register", async (RegisterRequest req, AppDbContext db, TokenServ
 
 auth.MapPost("/login", async (LoginRequest req, AppDbContext db, TokenService tokens) =>
 {
-    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+    var normalized = req.Username.Trim().ToLowerInvariant();
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == normalized);
     if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
         return Results.Unauthorized();
     return Results.Ok(new { token = tokens.Generate(user), user = UserDto(user) });
@@ -188,13 +212,31 @@ users.MapGet("/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db) =>
         .Include(u => u.Following)
         .FirstOrDefaultAsync(u => u.Id == id);
     if (user == null) return Results.NotFound();
+    var hasPending = me != Guid.Empty && await db.FriendRequests.AnyAsync(r =>
+        r.SenderId == me && r.RecipientId == id && r.Status == FriendRequestStatus.Pending);
+    var isFriend = me != Guid.Empty && await db.FriendRequests.AnyAsync(r =>
+        r.Status == FriendRequestStatus.Accepted &&
+        ((r.SenderId == me && r.RecipientId == id) || (r.SenderId == id && r.RecipientId == me)));
     return Results.Ok(new
     {
         User = UserDto(user),
         FollowerCount = user.Followers.Count,
         FollowingCount = user.Following.Count,
-        IsFollowing = user.Followers.Any(f => f.FollowerId == me)
+        IsFollowing = user.Followers.Any(f => f.FollowerId == me),
+        HasPendingRequest = hasPending,
+        IsFriend = isFriend
     });
+});
+
+users.MapPost("/{id:guid}/verify", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    var me = await db.Users.FindAsync(TokenService.UserIdFromContext(ctx));
+    if (me == null || !me.IsMaster) return Results.Forbid();
+    var target = await db.Users.FindAsync(id);
+    if (target == null) return Results.NotFound();
+    target.IsVerified = !target.IsVerified;
+    await db.SaveChangesAsync();
+    return Results.Ok(new { target.Id, target.Username, target.IsVerified });
 });
 
 users.MapPost("/{id:guid}/follow", async (Guid id, HttpContext ctx, AppDbContext db) =>
@@ -257,8 +299,6 @@ friends.MapPost("/accept/{requestId:guid}", async (Guid requestId, HttpContext c
     var req = await db.FriendRequests.FindAsync(requestId);
     if (req == null || req.RecipientId != me) return Results.NotFound();
     req.Status = FriendRequestStatus.Accepted;
-
-    // Mutual follow
     if (!await db.Follows.AnyAsync(f => f.FollowerId == me && f.FolloweeId == req.SenderId))
         db.Follows.Add(new Follow { FollowerId = me, FolloweeId = req.SenderId });
     if (!await db.Follows.AnyAsync(f => f.FollowerId == req.SenderId && f.FolloweeId == me))
@@ -302,6 +342,21 @@ friends.MapGet("/requests/outgoing", async (HttpContext ctx, AppDbContext db) =>
     return Results.Ok(reqs);
 });
 
+friends.MapGet("/list", async (HttpContext ctx, AppDbContext db) =>
+{
+    var me = TokenService.UserIdFromContext(ctx);
+    var accepted = await db.FriendRequests
+        .Where(r => r.Status == FriendRequestStatus.Accepted &&
+                    (r.SenderId == me || r.RecipientId == me))
+        .ToListAsync();
+    var friendIds = accepted.Select(r => r.SenderId == me ? r.RecipientId : r.SenderId).ToList();
+    var users = await db.Users
+        .Where(u => friendIds.Contains(u.Id))
+        .Select(u => new { u.Id, u.Username, u.DisplayName, u.AccentColor, u.IsVerified, u.IsMaster })
+        .ToListAsync();
+    return Results.Ok(users);
+});
+
 // ═════════════════════════════════════════════════════════════════════════════
 // POSTS
 // ═════════════════════════════════════════════════════════════════════════════
@@ -313,24 +368,22 @@ posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db
     var me = TokenService.UserIdFromContext(ctx);
     var post = new Post { AuthorId = me, Caption = req.Caption.Trim(), Tags = req.Tags };
     db.Posts.Add(post);
-
-    // Notify followers
+    var actor = await db.Users.FindAsync(me);
     var followerIds = await db.Follows
         .Where(f => f.FolloweeId == me)
         .Select(f => f.FollowerId)
         .ToListAsync();
-    var actor = await db.Users.FindAsync(me);
-    foreach (var fid in followerIds)
-    {
-        var follower = await db.Users.FindAsync(fid);
-        if (follower?.NotifyFollowedPosts == true)
-            db.Notifications.Add(new Notification
-            {
-                RecipientId = fid, ActorId = me, Type = "post",
-                RelatedPostId = post.Id,
-                Body = $"@{actor?.Username} shared a new post"
-            });
-    }
+    var notifiableFollowers = await db.Users
+        .Where(u => followerIds.Contains(u.Id) && u.NotifyFollowedPosts)
+        .Select(u => u.Id)
+        .ToListAsync();
+    foreach (var fid in notifiableFollowers)
+        db.Notifications.Add(new Notification
+        {
+            RecipientId = fid, ActorId = me, Type = "post",
+            RelatedPostId = post.Id,
+            Body = $"@{actor?.Username} shared a new post"
+        });
 
     await db.SaveChangesAsync();
     var created = await db.Posts
@@ -357,16 +410,37 @@ posts.MapGet("/feed", async (HttpContext ctx, AppDbContext db, int page = 0) =>
     return Results.Ok(feed.Select(p => PostDto(p, me)));
 });
 
-posts.MapGet("/explore", async (HttpContext ctx, AppDbContext db, string? tag = null, int page = 0) =>
+posts.MapGet("/explore", async (HttpContext ctx, AppDbContext db, string? tag = null, string? q = null, int page = 0) =>
 {
     var me = TokenService.UserIdFromContext(ctx);
-    var q = db.Posts.Include(p => p.Author).Include(p => p.Likes)
+    var query = db.Posts.Include(p => p.Author).Include(p => p.Likes)
         .Include(p => p.Comments).ThenInclude(c => c.Author)
         .AsQueryable();
     if (!string.IsNullOrEmpty(tag))
-        q = q.Where(p => p.Tags.Contains(tag));
-    var results = await q.OrderByDescending(p => p.CreatedAt).Skip(page * 20).Take(20).ToListAsync();
+        query = query.Where(p => p.Tags.Contains(tag));
+    if (!string.IsNullOrEmpty(q))
+        query = query.Where(p => p.Caption.Contains(q) || p.Tags.Contains(q) || p.Author.Username.Contains(q) || p.Author.DisplayName.Contains(q));
+    var results = await query.OrderByDescending(p => p.CreatedAt).Skip(page * 20).Take(20).ToListAsync();
     return Results.Ok(results.Select(p => PostDto(p, me)));
+});
+
+posts.MapGet("/trending-tags", async (AppDbContext db) =>
+{
+    var recent = await db.Posts
+        .Where(p => !string.IsNullOrEmpty(p.Tags))
+        .OrderByDescending(p => p.CreatedAt)
+        .Take(200)
+        .Select(p => p.Tags)
+        .ToListAsync();
+
+    var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+    foreach (var tagStr in recent)
+        foreach (var tag in tagStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            counts[tag] = counts.GetValueOrDefault(tag) + 1;
+
+    var top = counts.OrderByDescending(kv => kv.Value).Take(20)
+        .Select(kv => new { tag = kv.Key, count = kv.Value });
+    return Results.Ok(top);
 });
 
 posts.MapPost("/{id:guid}/like", async (Guid id, HttpContext ctx, AppDbContext db) =>
@@ -390,7 +464,10 @@ posts.MapPost("/{id:guid}/like", async (Guid id, HttpContext ctx, AppDbContext d
         }
     }
     else
-        db.PostLikes.Remove(await db.PostLikes.FindAsync(id, me) ?? throw new Exception());
+    {
+        var like = await db.PostLikes.FindAsync(id, me);
+        if (like != null) db.PostLikes.Remove(like);
+    }
 
     await db.SaveChangesAsync();
     var count = await db.PostLikes.CountAsync(l => l.PostId == id);
@@ -402,21 +479,18 @@ posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpCont
     var me   = TokenService.UserIdFromContext(ctx);
     var post = await db.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
     if (post == null) return Results.NotFound();
+    var actor   = await db.Users.FindAsync(me);
     var comment = new Comment { PostId = id, AuthorId = me, Text = req.Text.Trim() };
     db.Comments.Add(comment);
     if (post.AuthorId != me)
-    {
-        var actor = await db.Users.FindAsync(me);
         db.Notifications.Add(new Notification
         {
             RecipientId = post.AuthorId, ActorId = me, Type = "comment",
             RelatedPostId = id,
             Body = $"@{actor?.Username} commented: {(req.Text.Length > 40 ? req.Text[..37] + "…" : req.Text)}"
         });
-    }
     await db.SaveChangesAsync();
-    var author = await db.Users.FindAsync(me);
-    return Results.Ok(new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = author?.Username, comment.Text, comment.CreatedAt });
+    return Results.Ok(new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = actor?.Username, comment.Text, comment.CreatedAt });
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -428,15 +502,44 @@ var stories = app.MapGroup("/stories").RequireAuthorization();
 stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext db) =>
 {
     var me = TokenService.UserIdFromContext(ctx);
+    var author = await db.Users.FindAsync(me);
+    if (author == null) return Results.Unauthorized();
     var story = new Story
     {
-        AuthorId = me,
-        Text = req.Text,
-        BackgroundColor = req.BackgroundColor
+        AuthorId        = me,
+        Text            = req.Text,
+        BackgroundColor = req.BackgroundColor,
+        TextX           = req.TextX,
+        TextY           = req.TextY,
+        TextScale       = req.TextScale,
+        TextRotation    = req.TextRotation,
+        TaggedUsers     = req.TaggedUsers
     };
     db.Stories.Add(story);
     await db.SaveChangesAsync();
-    return Results.Ok(new { story.Id, story.AuthorId, story.Text, story.BackgroundColor, story.CreatedAt, story.ExpiresAt });
+    return Results.Ok(StoryDto(story, author, false));
+});
+
+stories.MapPost("/{id:guid}/image", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    var me    = TokenService.UserIdFromContext(ctx);
+    var story = await db.Stories.FindAsync(id);
+    if (story == null || story.AuthorId != me) return Results.NotFound();
+
+    var form = await ctx.Request.ReadFormAsync();
+    var file = form.Files.GetFile("file");
+    if (file == null) return Results.BadRequest("No file");
+    if (file.Length > 15 * 1024 * 1024) return Results.BadRequest("File too large (max 15 MB)");
+
+    var ext      = Path.GetExtension(file.FileName).ToLowerInvariant();
+    var filename = $"story_{id:N}{ext}";
+    var dest     = Path.Combine(imageDir, filename);
+    await using var fs = File.Create(dest);
+    await file.CopyToAsync(fs);
+
+    story.ImageUrl = $"/images/{filename}";
+    await db.SaveChangesAsync();
+    return Results.Ok(new { imageUrl = story.ImageUrl });
 });
 
 stories.MapGet("/feed", async (HttpContext ctx, AppDbContext db) =>
@@ -451,15 +554,7 @@ stories.MapGet("/feed", async (HttpContext ctx, AppDbContext db) =>
         .Where(s => followingIds.Contains(s.AuthorId) && s.ExpiresAt > now)
         .OrderByDescending(s => s.CreatedAt)
         .ToListAsync();
-    return Results.Ok(feed.Select(s => new
-    {
-        s.Id, s.AuthorId,
-        AuthorUsername = s.Author.Username,
-        AuthorDisplayName = s.Author.DisplayName,
-        AuthorAccent = s.Author.AccentColor,
-        s.Text, s.BackgroundColor, s.CreatedAt, s.ExpiresAt,
-        HasSeen = s.SeenBy.Any(ss => ss.UserId == me)
-    }));
+    return Results.Ok(feed.Select(s => StoryDto(s, s.Author, s.SeenBy.Any(ss => ss.UserId == me))));
 });
 
 stories.MapPost("/{id:guid}/seen", async (Guid id, HttpContext ctx, AppDbContext db) =>
@@ -615,16 +710,56 @@ notifs.MapPost("/read-all", async (HttpContext ctx, AppDbContext db) =>
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
-// AVATARS — upload + serve
+// POST IMAGES — upload + serve
 // ═════════════════════════════════════════════════════════════════════════════
 
-var avatarDir = app.Configuration["AvatarDir"]
-    ?? Path.Combine(AppContext.BaseDirectory, "avatars");
-Directory.CreateDirectory(avatarDir);
+app.MapGet("/images/{filename}", (string filename) =>
+{
+    if (filename.Contains('/') || filename.Contains('\\') || filename.Contains(".."))
+        return Results.BadRequest();
+    var path = Path.Combine(imageDir, filename);
+    if (!File.Exists(path)) return Results.NotFound();
+    var ext  = Path.GetExtension(filename).ToLowerInvariant();
+    var mime = ext is ".jpg" or ".jpeg" ? "image/jpeg"
+             : ext == ".png"            ? "image/png"
+             : ext == ".gif"            ? "image/gif"
+             : ext == ".webp"           ? "image/webp"
+             : "application/octet-stream";
+    return Results.File(path, mime);
+});
+
+posts.MapPost("/{id:guid}/image", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    var me   = TokenService.UserIdFromContext(ctx);
+    var post = await db.Posts.FindAsync(id);
+    if (post == null || post.AuthorId != me) return Results.NotFound();
+
+    var form = await ctx.Request.ReadFormAsync();
+    var file = form.Files.GetFile("file");
+    if (file == null) return Results.BadRequest("No file");
+    if (file.Length > 10 * 1024 * 1024) return Results.BadRequest("File too large (max 10 MB)");
+
+    var ext      = Path.GetExtension(file.FileName).ToLowerInvariant();
+    var filename = $"post_{id:N}{ext}";
+    var dest     = Path.Combine(imageDir, filename);
+    await using var fs = File.Create(dest);
+    await file.CopyToAsync(fs);
+
+    post.ImageUrl = $"/images/{filename}";
+    await db.SaveChangesAsync();
+    return Results.Ok(new { imageUrl = post.ImageUrl });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// AVATARS — upload + serve
+// ═════════════════════════════════════════════════════════════════════════════
 
 // Serve avatar files at /avatars/{filename}
 app.MapGet("/avatars/{filename}", (string filename) =>
 {
+    // Reject any path traversal attempts
+    if (filename.Contains('/') || filename.Contains('\\') || filename.Contains(".."))
+        return Results.BadRequest();
     var path = Path.Combine(avatarDir, filename);
     if (!File.Exists(path)) return Results.NotFound();
     return Results.File(path, "image/png");
@@ -668,7 +803,8 @@ record UpdateProfileRequest(string DisplayName, string Bio, string Website,
     bool NotifyDMs, bool NotifyFollowedPosts);
 record CreatePostRequest(string Caption, string Tags);
 record CommentRequest(string Text);
-record CreateStoryRequest(string Text, string BackgroundColor);
+record CreateStoryRequest(string Text, string BackgroundColor,
+    double TextX = 0.5, double TextY = 0.5, double TextScale = 1.0, double TextRotation = 0.0, string TaggedUsers = "");
 record DmRequest(Guid TargetUserId);
 record GroupRequest(string Name, List<Guid> MemberIds);
 record RenameRequest(string Name);

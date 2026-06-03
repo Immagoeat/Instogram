@@ -27,22 +27,68 @@
       <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
       <Setter Property="CaretBrush"  Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="SelectionBrush" Value="#8b5cf6"/>
     </Style>
-    <!-- Fix FluentTheme watermark/hover/focus background flicker -->
-    <Style Selector="TextBox:watermark /template/ TextBlock">
-      <Setter Property="Foreground" Value="#666666"/>
-    </Style>
-    <Style Selector="TextBox:watermark">
-      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
-    </Style>
+    <!-- Override every state FluentTheme changes on TextBox itself -->
     <Style Selector="TextBox:pointerover">
       <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
     </Style>
     <Style Selector="TextBox:focus">
       <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
     </Style>
-    <Style Selector="TextBox:focus:watermark /template/ TextBlock">
+    <Style Selector="TextBox:focus:pointerover">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <!-- Kill FluentTheme inner-border glow/highlight on every state -->
+    <Style Selector="TextBox /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox:focus:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox:watermark /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+    </Style>
+    <Style Selector="TextBox:watermark:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+    </Style>
+    <!-- Kill the focus adorner (dotted rectangle) entirely -->
+    <Style Selector="TextBox:focus-within">
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+    </Style>
+    <!-- Placeholder text colour locked -->
+    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
       <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Opacity" Value="1"/>
     </Style>
     <Style Selector="ScrollViewer">
       <Setter Property="Background" Value="{DynamicResource AppBgBrush}"/>

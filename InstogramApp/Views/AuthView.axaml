@@ -6,52 +6,101 @@
     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
       <Grid VerticalAlignment="Center" HorizontalAlignment="Center"
-            Width="380" Margin="0,40,0,40">
-        <StackPanel Spacing="14">
+            Width="400" Margin="0,48,0,48">
+        <StackPanel Spacing="20">
 
           <!-- Brand -->
-          <StackPanel HorizontalAlignment="Center" Spacing="4" Margin="0,0,0,12">
-            <TextBlock Text="Instogram" FontSize="32" FontWeight="Bold"
+          <StackPanel HorizontalAlignment="Center" Spacing="6" Margin="0,0,0,8">
+            <TextBlock Text="Instogram" FontSize="38" FontWeight="Bold"
                        Foreground="{DynamicResource AppTextBrush}" HorizontalAlignment="Center"
-                       LetterSpacing="0.5"/>
-            <TextBlock Text="Share your world" FontSize="13" Foreground="#888888"
-                       HorizontalAlignment="Center"/>
+                       LetterSpacing="1"/>
+            <TextBlock Text="Share your world." FontSize="14" Foreground="#666666"
+                       HorizontalAlignment="Center" LetterSpacing="0.4"/>
           </StackPanel>
 
           <!-- Card -->
-          <Border Background="{DynamicResource AppCardBrush}" CornerRadius="16" Padding="28"
+          <Border Background="{DynamicResource AppCardBrush}" CornerRadius="20" Padding="32,28"
                   BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
-            <StackPanel Spacing="12">
+            <StackPanel Spacing="14">
 
               <TextBlock Text="{Binding FormTitle}" Foreground="{DynamicResource AppTextBrush}"
-                         FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                         FontSize="20" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
               <!-- Always shown -->
-              <TextBox Text="{Binding Username}" PlaceholderText="Username"
-                       Classes="authInput"/>
-              <TextBox Text="{Binding Password}" PlaceholderText="Password"
-                       PasswordChar="●" Classes="authInput"/>
-
-              <!-- Register-only -->
-              <TextBox Text="{Binding DisplayName}" PlaceholderText="Display name"
-                       IsVisible="{Binding ShowRegister}" Classes="authInput"/>
-              <TextBox Text="{Binding Email}" PlaceholderText="Email (optional)"
-                       IsVisible="{Binding ShowRegister}" Classes="authInput"/>
-
-              <!-- CAPTCHA -->
-              <StackPanel IsVisible="{Binding ShowRegister}" Spacing="8">
-                <Border Background="#0f0a1e" CornerRadius="8" Padding="12,10"
-                        BorderBrush="#2a1a4a" BorderThickness="1">
-                  <StackPanel Spacing="6">
-                    <TextBlock Text="Human verification" Foreground="#7c3aed"
-                               FontSize="11" FontWeight="SemiBold" LetterSpacing="0.5"/>
-                    <TextBlock Text="{Binding CaptchaQuestion}" Foreground="#e2d9f3"
-                               FontSize="14" FontWeight="Medium"/>
-                  </StackPanel>
-                </Border>
-                <TextBox Text="{Binding CaptchaAnswer}" PlaceholderText="Your answer"
+              <StackPanel Spacing="4">
+                <TextBlock Text="Username" Foreground="#777777" FontSize="11"
+                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBox Text="{Binding Username}" PlaceholderText="your_username"
                          Classes="authInput"/>
               </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="Password" Foreground="#777777" FontSize="11"
+                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBox Text="{Binding Password}" PlaceholderText="••••••••"
+                         PasswordChar="●" Classes="authInput"/>
+              </StackPanel>
+
+              <!-- Register-only -->
+              <StackPanel IsVisible="{Binding ShowRegister}" Spacing="4">
+                <TextBlock Text="Display Name" Foreground="#777777" FontSize="11"
+                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBox Text="{Binding DisplayName}" PlaceholderText="Your Name"
+                         Classes="authInput"/>
+              </StackPanel>
+
+              <StackPanel IsVisible="{Binding ShowRegister}" Spacing="4">
+                <TextBlock Text="Email" Foreground="#777777" FontSize="11"
+                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBox Text="{Binding Email}" PlaceholderText="hello@example.com"
+                         Classes="authInput"/>
+              </StackPanel>
+
+              <!-- CAPTCHA -->
+              <StackPanel IsVisible="{Binding ShowRegister}" Spacing="8" Margin="0,4,0,0">
+                <Border Background="#0c0820" CornerRadius="12" Padding="16,14"
+                        BorderBrush="#2d1a5e" BorderThickness="1">
+                  <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Border Background="#2d1a5e" CornerRadius="6" Padding="6,3">
+                        <TextBlock Text="VERIFY" Foreground="#a78bfa"
+                                   FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
+                      </Border>
+                      <TextBlock Text="Prove you're human" Foreground="#888888" FontSize="12"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding CaptchaQuestion}" Foreground="#e2d9f3"
+                               FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Border>
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Your Answer" Foreground="#777777" FontSize="11"
+                             FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                  <TextBox Text="{Binding CaptchaAnswer}" PlaceholderText="Enter your answer"
+                           Classes="authInput"/>
+                </StackPanel>
+              </StackPanel>
+
+              <!-- Server URL (collapsible) -->
+              <Border Background="{DynamicResource AppBgBrush}" CornerRadius="10" Padding="12,10"
+                      BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                      Margin="0,4,0,0">
+                <StackPanel Spacing="8">
+                  <Button Click="OnToggleServerUrl" Classes="linkBtn"
+                          Content="{Binding ServerUrlToggleLabel}"
+                          HorizontalAlignment="Left" Padding="0,0"/>
+                  <StackPanel IsVisible="{Binding ShowServerUrl}" Spacing="6">
+                    <TextBox Text="{Binding ServerUrl}"
+                             PlaceholderText="http://localhost:5000"
+                             Classes="authInput"/>
+                    <TextBlock Text="{Binding ServerStatus}"
+                               Foreground="#7c6aab" FontSize="11"
+                               IsVisible="{Binding ServerStatus,
+                               Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Margin="4,0,0,0"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
 
               <!-- Busy spinner -->
               <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}"
@@ -60,31 +109,40 @@
                            CornerRadius="2"/>
 
               <!-- Error -->
-              <Border Background="#1a0808" CornerRadius="8" Padding="12,9"
-                      BorderBrush="#3a1515" BorderThickness="1"
+              <Border Background="#180a0a" CornerRadius="10" Padding="14,11"
+                      BorderBrush="#3d1515" BorderThickness="1"
                       IsVisible="{Binding ErrorMessage,
                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080"
-                           FontSize="13" TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="✕" Foreground="#ff6b6b" FontWeight="Bold" FontSize="12"
+                             VerticalAlignment="Top" Margin="0,1,0,0"/>
+                  <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080"
+                             FontSize="13" TextWrapping="Wrap"/>
+                </StackPanel>
               </Border>
 
               <Button Click="OnLogin" IsVisible="{Binding ShowLogin}"
                       Content="Log In" Classes="primaryBtn"
-                      HorizontalAlignment="Stretch"/>
+                      HorizontalAlignment="Stretch" Margin="0,4,0,0"/>
               <Button Click="OnRegister" IsVisible="{Binding ShowRegister}"
                       Content="Create Account" Classes="primaryBtn"
-                      HorizontalAlignment="Stretch"/>
+                      HorizontalAlignment="Stretch" Margin="0,4,0,0"/>
 
             </StackPanel>
           </Border>
 
           <!-- Toggle link -->
-          <Button Click="OnToggleRegister" IsVisible="{Binding ShowLogin}"
-                  Classes="linkBtn" HorizontalAlignment="Center"
-                  Content="Don't have an account? Register"/>
-          <Button Click="OnToggleRegister" IsVisible="{Binding ShowRegister}"
-                  Classes="linkBtn" HorizontalAlignment="Center"
-                  Content="Already have an account? Log in"/>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+            <TextBlock IsVisible="{Binding ShowLogin}" Text="New to Instogram?"
+                       Foreground="#555555" FontSize="13" VerticalAlignment="Center"/>
+            <Button Click="OnToggleRegister" IsVisible="{Binding ShowLogin}"
+                    Classes="linkBtn" Content="Create an account"/>
+
+            <TextBlock IsVisible="{Binding ShowRegister}" Text="Already have an account?"
+                       Foreground="#555555" FontSize="13" VerticalAlignment="Center"/>
+            <Button Click="OnToggleRegister" IsVisible="{Binding ShowRegister}"
+                    Classes="linkBtn" Content="Log in"/>
+          </StackPanel>
 
         </StackPanel>
       </Grid>
@@ -93,41 +151,54 @@
 
   <UserControl.Styles>
     <Style Selector="TextBox.authInput">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
-      <Setter Property="Padding" Value="14,10"/>
-      <Setter Property="CornerRadius" Value="10"/>
-      <Setter Property="FontSize" Value="14"/>
-    </Style>
-    <Style Selector="TextBox.authInput:watermark /template/ TextBlock">
-      <Setter Property="Foreground" Value="#666666"/>
-    </Style>
-    <Style Selector="TextBox.authInput:watermark">
-      <Setter Property="Background" Value="#1a1a1a"/>
-    </Style>
-    <Style Selector="TextBox.authInput:pointerover">
-      <Setter Property="Background" Value="#1a1a1a"/>
-    </Style>
-    <Style Selector="TextBox.authInput:focus">
-      <Setter Property="Background" Value="#1a1a1a"/>
-    </Style>
-    <Style Selector="Button.primaryBtn">
-      <Setter Property="Background" Value="#8b5cf6"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
       <Setter Property="Padding" Value="14,11"/>
       <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="TextBox.authInput /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.authInput:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.authInput:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.authInput:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.authInput /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="Button.primaryBtn">
+      <Setter Property="Background" Value="#7c3aed"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="15"/>
+      <Setter Property="Padding" Value="14,13"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.primaryBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#6d28d9"/>
     </Style>
     <Style Selector="Button.linkBtn">
       <Setter Property="Background" Value="#01000000"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Foreground" Value="#7c3aed"/>
+      <Setter Property="Foreground" Value="#8b5cf6"/>
       <Setter Property="FontSize" Value="13"/>
-      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="4,4"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
   </UserControl.Styles>

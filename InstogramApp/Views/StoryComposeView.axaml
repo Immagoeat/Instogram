@@ -1,91 +1,335 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:InstogramApp.Controls"
              x:Class="InstogramApp.Views.StoryComposeView">
 
-  <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="460">
-    <Border Background="{DynamicResource AppCardBrush}" CornerRadius="16" Padding="32"
-            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
-      <StackPanel Spacing="18">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid VerticalAlignment="Top" HorizontalAlignment="Center" Width="560" Margin="0,24,0,32">
+      <Border Background="{DynamicResource AppCardBrush}" CornerRadius="20" Padding="0"
+              BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+              ClipToBounds="True">
+        <StackPanel>
 
-        <StackPanel Spacing="4">
-          <TextBlock Text="New Story" Foreground="{DynamicResource AppTextBrush}" FontSize="22" FontWeight="Bold"/>
-          <TextBlock Text="Visible for 24 hours to your followers"
-                     Foreground="#444444" FontSize="13"/>
+          <!-- ── Header ─────────────────────────────────────────────── -->
+          <StackPanel Margin="32,28,32,0" Spacing="3">
+            <TextBlock Text="New Story" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="Visible for 24 hours to your followers"
+                       Foreground="#555555" FontSize="13"/>
+          </StackPanel>
+
+          <Border Height="1" Background="{DynamicResource AppBorderBrush}"
+                  Margin="0,20,0,0" Opacity="0.6"/>
+
+          <!-- ── Live canvas preview ────────────────────────────────── -->
+          <Border x:Name="PreviewCanvas"
+                  Height="340" Margin="0"
+                  Background="{Binding SelectedColor}"
+                  ClipToBounds="True">
+            <Grid>
+              <!-- Background image (if picked) -->
+              <ctl:AsyncImage x:Name="BgImageDisplay"
+                              Source="{Binding BgImagePath}"
+                              IsVisible="{Binding HasBgImage}"/>
+              <!-- Draggable text overlay -->
+              <Border x:Name="TextOverlay"
+                      HorizontalAlignment="Left" VerticalAlignment="Top"
+                      RenderTransformOrigin="50%,50%"
+                      Cursor="SizeAll"
+                      PointerPressed="OnTextOverlayPressed"
+                      PointerMoved="OnTextOverlayMoved"
+                      PointerReleased="OnTextOverlayReleased"
+                      Background="#00000000">
+                <Border.RenderTransform>
+                  <RotateTransform Angle="0"/>
+                </Border.RenderTransform>
+                <Border Background="#66000000" CornerRadius="8" Padding="12,8">
+                  <TextBlock x:Name="PreviewText"
+                             Text="{Binding Text}"
+                             Foreground="White" FontWeight="SemiBold"
+                             FontSize="20" TextWrapping="Wrap"
+                             MaxWidth="400" TextAlignment="Center"/>
+                </Border>
+              </Border>
+              <!-- Drag hint -->
+              <TextBlock Text="Drag the text to reposition"
+                         Foreground="#55ffffff" FontSize="11"
+                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                         Margin="0,0,10,8"
+                         IsVisible="{Binding Text,
+                         Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            </Grid>
+          </Border>
+
+          <StackPanel Margin="32,24,32,28" Spacing="20">
+
+            <!-- ── Text input ──────────────────────────────────────── -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="STORY TEXT" Foreground="#555555" FontSize="11"
+                         FontWeight="SemiBold" LetterSpacing="0.8"/>
+              <TextBox Text="{Binding Text}"
+                       PlaceholderText="What's your story?"
+                       AcceptsReturn="True" MinHeight="80" MaxHeight="160"
+                       TextWrapping="Wrap" Classes="storyInput"/>
+            </StackPanel>
+
+            <!-- ── Text size + rotation ───────────────────────────── -->
+            <Grid ColumnDefinitions="*,24,*">
+              <!-- Size -->
+              <StackPanel Grid.Column="0" Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="TEXT SIZE" Foreground="#555555" FontSize="11"
+                             FontWeight="SemiBold" LetterSpacing="0.8"/>
+                  <TextBlock Text="{Binding TextScale, StringFormat={}{0:P0}}"
+                             Foreground="#7c3aed" FontSize="11" FontWeight="Medium"/>
+                </StackPanel>
+                <Slider x:Name="ScaleSlider"
+                        Minimum="0.5" Maximum="3.0" Value="{Binding TextScale}"
+                        TickFrequency="0.1" IsSnapToTickEnabled="False"
+                        ValueChanged="OnScaleChanged"/>
+              </StackPanel>
+              <!-- Rotation -->
+              <StackPanel Grid.Column="2" Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="ROTATION" Foreground="#555555" FontSize="11"
+                             FontWeight="SemiBold" LetterSpacing="0.8"/>
+                  <TextBlock Text="{Binding TextRotation, StringFormat={}{0:F0}°}"
+                             Foreground="#7c3aed" FontSize="11" FontWeight="Medium"/>
+                </StackPanel>
+                <Slider x:Name="RotationSlider"
+                        Minimum="-180" Maximum="180" Value="{Binding TextRotation}"
+                        TickFrequency="1" IsSnapToTickEnabled="False"
+                        ValueChanged="OnRotationChanged"/>
+              </StackPanel>
+            </Grid>
+
+            <!-- ── Background colour picker ───────────────────────── -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="BACKGROUND COLOUR" Foreground="#555555" FontSize="11"
+                         FontWeight="SemiBold" LetterSpacing="0.8"/>
+              <ItemsControl ItemsSource="{Binding BackgroundOptions}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Button Click="OnSelectColor" Tag="{Binding}"
+                            Width="38" Height="38" Margin="0,0,8,8"
+                            CornerRadius="10" Padding="0" Cursor="Hand"
+                            Background="{Binding}"
+                            BorderThickness="2" BorderBrush="#00000000"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- ── Background image picker ────────────────────────── -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="BACKGROUND IMAGE" Foreground="#555555" FontSize="11"
+                         FontWeight="SemiBold" LetterSpacing="0.8"/>
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding BgImagePath}"
+                           Foreground="#888888" FontSize="12"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding HasBgImage}"/>
+                <TextBlock Grid.Column="0"
+                           Text="No image — solid colour will be used"
+                           Foreground="#444444" FontSize="12" VerticalAlignment="Center"
+                           IsVisible="{Binding !HasBgImage}"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                  <Button Click="OnPickBgImage" Classes="secondaryBtn" Content="Choose Image"/>
+                  <Button Click="OnClearBgImage" Classes="ghostBtn" Content="Clear"
+                          IsVisible="{Binding HasBgImage}"/>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+
+            <!-- ── @mention tagging ────────────────────────────────── -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="TAG PEOPLE" Foreground="#555555" FontSize="11"
+                         FontWeight="SemiBold" LetterSpacing="0.8"/>
+              <!-- Search box -->
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" Text="{Binding MentionQuery}"
+                         PlaceholderText="Search by username…"
+                         Classes="storyInput"/>
+              </Grid>
+              <!-- Suggestion dropdown -->
+              <Border IsVisible="{Binding ShowSuggestions}"
+                      Background="{DynamicResource AppSurfaceBrush}"
+                      CornerRadius="10" BorderBrush="{DynamicResource AppBorderBrush}"
+                      BorderThickness="1" Padding="4">
+                <ItemsControl ItemsSource="{Binding Suggestions}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Click="OnAddTag" Tag="{Binding}"
+                              Classes="suggestionRow"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                          <Border Width="30" Height="30" CornerRadius="15"
+                                  Background="{Binding AccentColor}">
+                            <TextBlock Text="{Binding Initial}" Foreground="White"
+                                       FontWeight="Bold" FontSize="13"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                          </Border>
+                          <StackPanel VerticalAlignment="Center" Spacing="1">
+                            <TextBlock Text="{Binding DisplayName}"
+                                       Foreground="{DynamicResource AppTextBrush}"
+                                       FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
+                                       Foreground="#666666" FontSize="11"/>
+                          </StackPanel>
+                        </StackPanel>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+              <!-- Tagged chips -->
+              <ItemsControl ItemsSource="{Binding TaggedUsers}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Background="#1e1040" CornerRadius="20"
+                            BorderBrush="#4c1d95" BorderThickness="1"
+                            Padding="10,5" Margin="0,0,6,6">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
+                                   Foreground="#a78bfa" FontSize="12" FontWeight="Medium"
+                                   VerticalAlignment="Center"/>
+                        <Button Click="OnRemoveTag" Tag="{Binding}"
+                                Classes="chipRemoveBtn" Content="✕"/>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- ── Error ────────────────────────────────────────────── -->
+            <Border Background="#180a0a" CornerRadius="10" Padding="14,10"
+                    BorderBrush="#3d1515" BorderThickness="1"
+                    IsVisible="{Binding ErrorMessage,
+                    Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="✕" Foreground="#ff6b6b" FontWeight="Bold" FontSize="12"
+                           VerticalAlignment="Top" Margin="0,1,0,0"/>
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080"
+                           FontSize="13" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+
+            <!-- ── Progress ─────────────────────────────────────────── -->
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}"
+                         Height="3" Foreground="#8b5cf6"
+                         Background="{DynamicResource AppInputBrush}" CornerRadius="2"/>
+
+            <!-- ── Actions ──────────────────────────────────────────── -->
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Click="OnPost"   Content="Share Story" Classes="primaryBtn" Width="160"/>
+              <Button Click="OnCancel" Content="Discard"     Classes="cancelBtn"  Width="110"/>
+            </StackPanel>
+
+          </StackPanel>
         </StackPanel>
-
-        <!-- Live preview -->
-        <Border CornerRadius="14" Height="180" Padding="20"
-                Background="{Binding SelectedColor}">
-          <TextBlock Text="{Binding Text}" Foreground="{DynamicResource AppTextBrush}" FontSize="18"
-                     FontWeight="Medium" TextWrapping="Wrap"
-                     VerticalAlignment="Center" HorizontalAlignment="Center"
-                     TextAlignment="Center"/>
-        </Border>
-
-        <TextBox Text="{Binding Text}"
-                 PlaceholderText="What's your story?"
-                 AcceptsReturn="True" MinHeight="80" MaxHeight="160"
-                 TextWrapping="Wrap" Classes="darkInput"/>
-
-        <!-- Background colour picker -->
-        <StackPanel Spacing="6">
-          <TextBlock Text="Background" Foreground="#666666" FontSize="12"/>
-          <ItemsControl ItemsSource="{Binding BackgroundOptions}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Button Click="OnSelectColor" Tag="{Binding}"
-                        Width="36" Height="36" Margin="0,0,8,0"
-                        CornerRadius="18" Padding="0" Cursor="Hand"
-                        Background="{Binding}"/>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-
-        <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080" FontSize="13"
-                   IsVisible="{Binding ErrorMessage,
-                   Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <Button Click="OnPost"   Content="Share Story" Classes="primaryBtn" Width="150"/>
-          <Button Click="OnCancel" Content="Discard"     Classes="cancelBtn"  Width="100"/>
-        </StackPanel>
-
-      </StackPanel>
-    </Border>
-  </Grid>
+      </Border>
+    </Grid>
+  </ScrollViewer>
 
   <UserControl.Styles>
-    <Style Selector="TextBox.darkInput">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
-      <Setter Property="Padding" Value="14,10"/>
+    <Style Selector="TextBox.storyInput">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="14,11"/>
       <Setter Property="CornerRadius" Value="10"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
+    <Style Selector="TextBox.storyInput /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.storyInput:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.storyInput:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.storyInput:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.storyInput /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
     <Style Selector="Button.primaryBtn">
-      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Background" Value="#7c3aed"/>
       <Setter Property="Foreground" Value="White"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="FontSize" Value="14"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="CornerRadius" Value="10"/>
-      <Setter Property="HorizontalContentAlignment" Value="Center"/>
-      <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-    <Style Selector="Button.cancelBtn">
-      <Setter Property="Background" Value="#1e1e1e"/>
-      <Setter Property="Foreground" Value="#888888"/>
-      <Setter Property="FontSize" Value="14"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.primaryBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#6d28d9"/>
+    </Style>
+    <Style Selector="Button.cancelBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="#888888"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.secondaryBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.ghostBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.suggestionRow">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.suggestionRow:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1c1c2e"/>
+    </Style>
+    <Style Selector="Button.chipRemoveBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#7c3aed"/>
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Padding" Value="2,0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

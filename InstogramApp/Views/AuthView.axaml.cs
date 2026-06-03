@@ -10,7 +10,8 @@ public partial class AuthView : UserControl
 
     AuthViewModel VM => (AuthViewModel)DataContext!;
 
-    void OnToggleRegister(object? sender, RoutedEventArgs e) => VM.ToggleRegisterCommand.Execute(null);
-    void OnLogin(object? sender, RoutedEventArgs e)          => VM.LoginCommand.Execute(null);
-    void OnRegister(object? sender, RoutedEventArgs e)       => VM.RegisterCommand.Execute(null);
+    void OnToggleRegister(object? sender, RoutedEventArgs e)  => VM.ToggleRegisterCommand.Execute(null);
+    void OnToggleServerUrl(object? sender, RoutedEventArgs e) => VM.ToggleServerUrlCommand.Execute(null);
+    void OnLogin(object? sender, RoutedEventArgs e)           => VM.LoginCommand.Execute(null);
+    void OnRegister(object? sender, RoutedEventArgs e)        => VM.RegisterCommand.Execute(null);
 }

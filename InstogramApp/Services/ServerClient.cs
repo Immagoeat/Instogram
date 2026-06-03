@@ -13,11 +13,12 @@ namespace InstogramApp.Services;
 
 public record UserDto(
     Guid Id, string Username, string DisplayName, string Bio, string Website,
-    string AccentColor, string AvatarUrl, string Email, string Phone, string Address, DateTime CreatedAt);
+    string AccentColor, string AvatarUrl, string Email, string Phone, string Address,
+    bool IsVerified, bool IsMaster, DateTime CreatedAt);
 
 public record PostDto(
     Guid Id, Guid AuthorId, string AuthorUsername, string AuthorDisplayName,
-    string AuthorAccent, string Caption, string Tags, DateTime CreatedAt,
+    string AuthorAccent, string Caption, string Tags, string ImageUrl, DateTime CreatedAt,
     int LikeCount, bool IsLiked, IEnumerable<CommentDto> Comments);
 
 public record CommentDto(
@@ -25,7 +26,8 @@ public record CommentDto(
 
 public record StoryDto(
     Guid Id, Guid AuthorId, string AuthorUsername, string AuthorDisplayName,
-    string AuthorAccent, string Text, string BackgroundColor,
+    string AuthorAccent, string Text, string BackgroundColor, string ImageUrl,
+    double TextX, double TextY, double TextScale, double TextRotation, string TaggedUsers,
     DateTime CreatedAt, DateTime ExpiresAt, bool HasSeen);
 
 public record ConvDto(
@@ -52,7 +54,12 @@ public record FriendRequestDto(
 public record OutgoingFriendRequestDto(
     Guid Id, Guid RecipientId, string Username, string DisplayName, DateTime CreatedAt);
 
-public record UserProfileDto(UserDto User, int FollowerCount, int FollowingCount, bool IsFollowing);
+public record FriendDto(
+    Guid Id, string Username, string DisplayName, string AccentColor,
+    bool IsVerified = false, bool IsMaster = false);
+
+public record UserProfileDto(UserDto User, int FollowerCount, int FollowingCount, bool IsFollowing,
+    bool HasPendingRequest = false, bool IsFriend = false);
 
 // ── ServerClient ──────────────────────────────────────────────────────────────
 
@@ -229,8 +236,9 @@ public class ServerClient
         return resp.IsSuccessStatusCode;
     }
 
-    public Task FollowAsync(Guid id)   => _http.PostAsync($"users/{id}/follow", null).ContinueWith(_ => { });
-    public Task UnfollowAsync(Guid id) => _http.DeleteAsync($"users/{id}/follow").ContinueWith(_ => { });
+    public Task FollowAsync(Guid id)      => _http.PostAsync($"users/{id}/follow", null).ContinueWith(_ => { });
+    public Task UnfollowAsync(Guid id)   => _http.DeleteAsync($"users/{id}/follow").ContinueWith(_ => { });
+    public Task VerifyUserAsync(Guid id) => _http.PostAsync($"users/{id}/verify", null).ContinueWith(_ => { });
 
     public async Task<string?> UploadAvatarAsync(string filePath)
     {
@@ -260,6 +268,9 @@ public class ServerClient
     public Task<List<OutgoingFriendRequestDto>?> GetOutgoingRequestsAsync() =>
         _http.GetFromJsonAsync<List<OutgoingFriendRequestDto>>("friends/requests/outgoing", JsonOpts);
 
+    public Task<List<FriendDto>?> GetFriendsAsync() =>
+        _http.GetFromJsonAsync<List<FriendDto>>("friends/list", JsonOpts);
+
     // ── Posts ─────────────────────────────────────────────────────────────────
 
     public async Task<PostDto?> CreatePostAsync(string caption, string tags)
@@ -269,13 +280,30 @@ public class ServerClient
         return await resp.Content.ReadFromJsonAsync<PostDto>(JsonOpts);
     }
 
+    public async Task<string?> UploadPostImageAsync(Guid postId, string filePath)
+    {
+        await using var fs = System.IO.File.OpenRead(filePath);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(fs), "file", System.IO.Path.GetFileName(filePath));
+        var resp = await _http.PostAsync($"posts/{postId}/image", content);
+        if (!resp.IsSuccessStatusCode) return null;
+        var body = await resp.Content.ReadFromJsonAsync<ImageUploadResponse>(JsonOpts);
+        return body?.ImageUrl;
+    }
+
     public Task<List<PostDto>?> GetFeedAsync(int page = 0) =>
         _http.GetFromJsonAsync<List<PostDto>>($"posts/feed?page={page}", JsonOpts);
 
-    public Task<List<PostDto>?> GetExploreAsync(string? tag = null, int page = 0) =>
-        _http.GetFromJsonAsync<List<PostDto>>(
-            $"posts/explore?page={page}" + (tag != null ? $"&tag={Uri.EscapeDataString(tag)}" : ""),
-            JsonOpts);
+    public Task<List<PostDto>?> GetExploreAsync(string? tag = null, string? q = null, int page = 0)
+    {
+        var url = $"posts/explore?page={page}";
+        if (!string.IsNullOrEmpty(tag)) url += $"&tag={Uri.EscapeDataString(tag)}";
+        if (!string.IsNullOrEmpty(q))   url += $"&q={Uri.EscapeDataString(q)}";
+        return _http.GetFromJsonAsync<List<PostDto>>(url, JsonOpts);
+    }
+
+    public Task<List<TrendingTagDto>?> GetTrendingTagsAsync() =>
+        _http.GetFromJsonAsync<List<TrendingTagDto>>("posts/trending-tags", JsonOpts);
 
     public async Task<(bool liked, int count)> ToggleLikeAsync(Guid postId)
     {
@@ -294,11 +322,24 @@ public class ServerClient
 
     // ── Stories ───────────────────────────────────────────────────────────────
 
-    public async Task<StoryDto?> CreateStoryAsync(string text, string backgroundColor)
+    public async Task<StoryDto?> CreateStoryAsync(string text, string backgroundColor,
+        double textX, double textY, double textScale, double textRotation, string taggedUsers)
     {
-        var resp = await _http.PostAsJsonAsync("stories", new { text, backgroundColor });
+        var resp = await _http.PostAsJsonAsync("stories",
+            new { text, backgroundColor, textX, textY, textScale, textRotation, taggedUsers });
         if (!resp.IsSuccessStatusCode) return null;
         return await resp.Content.ReadFromJsonAsync<StoryDto>(JsonOpts);
+    }
+
+    public async Task<string?> UploadStoryImageAsync(Guid storyId, string filePath)
+    {
+        await using var fs = System.IO.File.OpenRead(filePath);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(fs), "file", System.IO.Path.GetFileName(filePath));
+        var resp = await _http.PostAsync($"stories/{storyId}/image", content);
+        if (!resp.IsSuccessStatusCode) return null;
+        var body = await resp.Content.ReadFromJsonAsync<ImageUploadResponse>(JsonOpts);
+        return body?.ImageUrl;
     }
 
     public Task<List<StoryDto>?> GetStoryFeedAsync() =>
@@ -361,6 +402,7 @@ public class ServerClient
     private record LikeResponse(bool Liked, int Count);
     private record NotifCountResponse(int Count);
     private record AvatarResponse(string AvatarUrl);
+    private record ImageUploadResponse(string ImageUrl);
 
     // Hub payload shapes
     private record TypingPayload(Guid ConversationId, string Username);
@@ -372,4 +414,5 @@ public class ServerClient
     private record MemberAddedPayload(Guid ConversationId, Guid UserId, string Username);
 }
 
-public record UserSearchResult(Guid Id, string Username, string DisplayName, string AccentColor);
+public record UserSearchResult(Guid Id, string Username, string DisplayName, string AccentColor, bool IsVerified = false, bool IsMaster = false);
+public record TrendingTagDto(string Tag, int Count);

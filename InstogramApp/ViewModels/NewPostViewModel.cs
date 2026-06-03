@@ -1,50 +1,158 @@
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using InstogramDependencies;
 using InstogramApp.Services;
 
 namespace InstogramApp.ViewModels;
+
+public partial class TagChipViewModel(string tag, NewPostViewModel parent) : ViewModelBase
+{
+    public string Tag { get; } = tag;
+    [ObservableProperty] private bool   _isSelected;
+    [ObservableProperty] private string _chipBackground = "#1a1a2e";
+    [ObservableProperty] private string _chipForeground = "#7c6aab";
+
+    partial void OnIsSelectedChanged(bool value)
+    {
+        ChipBackground = value ? "#3b1fa8" : "#1a1a2e";
+        ChipForeground = value ? "#e0d0ff" : "#7c6aab";
+    }
+
+    [RelayCommand]
+    void Toggle()
+    {
+        IsSelected = !IsSelected;
+        parent.OnTagToggled(Tag, IsSelected);
+    }
+}
 
 public partial class NewPostViewModel : ViewModelBase
 {
     private readonly MainWindowViewModel _main;
 
-    [ObservableProperty] private string _caption = "";
-    [ObservableProperty] private string _status  = "";
+    [ObservableProperty] private string _caption   = "";
+    [ObservableProperty] private string _status    = "";
+    [ObservableProperty] private bool   _isBusy;
+    [ObservableProperty] private string _imagePath = "";
+    [ObservableProperty] private bool   _hasImage;
 
-    public NewPostViewModel(MainWindowViewModel main) => _main = main;
+    public ObservableCollection<TagChipViewModel> PremadeTags   { get; } = new();
+    public ObservableCollection<TagChipViewModel> SuggestedTags { get; } = new();
+    [ObservableProperty] private bool _hasSuggestedTags;
+
+    private static readonly string[] _premade =
+    [
+        "photography", "art", "nature", "travel", "food",
+        "fitness", "music", "gaming", "fashion", "tech",
+        "animals", "sports", "selfie", "sunset", "coding",
+        "design", "books", "film", "coffee", "architecture"
+    ];
+
+    public NewPostViewModel(MainWindowViewModel main)
+    {
+        _main = main;
+        foreach (var t in _premade)
+            PremadeTags.Add(new TagChipViewModel(t, this));
+    }
+
+    partial void OnCaptionChanged(string value) => RefreshSuggestedTags(value);
+
+    private void RefreshSuggestedTags(string text)
+    {
+        var typed = Regex.Matches(text, @"#(\w+)")
+            .Select(m => m.Groups[1].Value.ToLower())
+            .Distinct()
+            .ToHashSet();
+
+        SuggestedTags.Clear();
+        foreach (var tag in typed)
+        {
+            var vm = new TagChipViewModel(tag, this);
+            vm.IsSelected = true;
+            SuggestedTags.Add(vm);
+        }
+        HasSuggestedTags = SuggestedTags.Count > 0;
+
+        foreach (var chip in PremadeTags)
+            chip.IsSelected = typed.Contains(chip.Tag);
+    }
+
+    public void OnTagToggled(string tag, bool selected)
+    {
+        if (selected)
+        {
+            if (!Caption.Contains($"#{tag}"))
+                Caption = Caption.TrimEnd() + (Caption.Length > 0 ? " " : "") + $"#{tag}";
+        }
+        else
+        {
+            Caption = Regex.Replace(Caption, $@"\s?#{Regex.Escape(tag)}\b", "").Trim();
+        }
+    }
+
+    partial void OnImagePathChanged(string value) => HasImage = !string.IsNullOrEmpty(value);
 
     [RelayCommand]
-    void Submit()
+    async Task PickImage()
     {
-        var me   = AppState.Instance.CurrentUser!;
+        var topLevel = Avalonia.Application.Current?.ApplicationLifetime
+            is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.MainWindow : null;
+        if (topLevel == null) return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(
+            new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Choose image",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new Avalonia.Platform.Storage.FilePickerFileType("Images")
+                    {
+                        Patterns  = ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"],
+                        MimeTypes = ["image/*"]
+                    }
+                ]
+            });
+        if (files.Count > 0)
+            ImagePath = files[0].Path.LocalPath;
+    }
+
+    [RelayCommand] void RemoveImage() => ImagePath = "";
+
+    [RelayCommand]
+    async Task Submit()
+    {
         var text = Caption.Trim();
-        if (string.IsNullOrEmpty(text)) { Status = "Caption cannot be empty."; return; }
+        if (string.IsNullOrEmpty(text) && !HasImage)
+        { Status = "Add a caption or image first."; return; }
 
-        var tags = text.Split(' ')
-                       .Where(w => w.StartsWith('#') && w.Length > 1)
-                       .Select(w => w.TrimStart('#').ToLower())
-                       .ToList();
+        var tags = string.Join(",", Regex.Matches(text, @"#(\w+)")
+            .Select(m => m.Groups[1].Value.ToLower())
+            .Distinct());
 
-        var post = AppState.Instance.Posts.CreatePost(me, text, MediaType.Text, "", tags);
-
-        // Notify each follower who has opted in
-        var snippet = text.Length > 50 ? text[..47] + "…" : text;
-        foreach (var followerId in me.Followers)
+        IsBusy = true;
+        Status = "";
+        try
         {
-            var follower = AppState.Instance.Accounts.GetById(followerId);
-            if (follower == null) continue;
-            AppState.Instance.PushNotification(follower, me,
-                NotificationType.NewPost,
-                $"@{me.Username} posted: {snippet}",
-                post.Id);
-        }
+            var post = await ServerClient.Instance.CreatePostAsync(text, tags);
+            if (post == null) { Status = "Failed to post — try again."; return; }
 
-        AppState.Instance.Save();
-        Status  = "Posted!";
-        Caption = "";
-        _main.Navigate(new FeedViewModel(_main));
+            if (HasImage)
+            {
+                Status = "Uploading image…";
+                await ServerClient.Instance.UploadPostImageAsync(post.Id, ImagePath);
+            }
+
+            Caption   = "";
+            ImagePath = "";
+            _main.Navigate(new FeedViewModel(_main));
+        }
+        catch { Status = "Could not reach server."; }
+        finally { IsBusy = false; }
     }
 
     [RelayCommand] void Cancel() => _main.Navigate(new FeedViewModel(_main));

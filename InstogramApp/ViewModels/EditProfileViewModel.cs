@@ -90,10 +90,13 @@ public partial class EditProfileViewModel : ViewModelBase
         if (files.Count > 0)
         {
             var sourcePath = files[0].Path.LocalPath;
-            _main.Navigate(new CropViewModel(_main, sourcePath, croppedPath =>
-            {
-                AvatarPath = croppedPath;
-            }));
+            _main.Navigate(new CropViewModel(_main, sourcePath,
+                onConfirm: croppedPath =>
+                {
+                    AvatarPath = croppedPath;
+                    _main.Navigate(this);
+                },
+                onCancel: () => _main.Navigate(this)));
         }
     }
 

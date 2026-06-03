@@ -1,52 +1,102 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:InstogramApp.Controls"
              x:Class="InstogramApp.Views.StoryViewerView">
 
-  <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="420">
+  <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="440">
     <StackPanel Spacing="0">
 
-      <!-- Progress dots -->
+      <!-- Progress bar -->
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                  Spacing="6" Margin="0,0,0,12">
-        <TextBlock Text="{Binding CurrentIndex}" Foreground="#888888" FontSize="12"/>
-        <TextBlock Text="/" Foreground="#444444" FontSize="12"/>
-        <TextBlock Text="{Binding TotalCount}" Foreground="#888888" FontSize="12"/>
+                  Spacing="4" Margin="0,0,0,14">
+        <TextBlock Text="{Binding CurrentIndex}" Foreground="#888888" FontSize="12"
+                   FontWeight="SemiBold"/>
+        <TextBlock Text=" / " Foreground="#444444" FontSize="12"/>
+        <TextBlock Text="{Binding TotalCount}" Foreground="#888888" FontSize="12"
+                   FontWeight="SemiBold"/>
       </StackPanel>
 
       <!-- Story card -->
-      <Border CornerRadius="20" Height="420" Background="{Binding BgColor}"
-              ClipToBounds="True">
-        <Grid>
-          <!-- Author bar -->
-          <StackPanel Orientation="Horizontal" Spacing="10" Margin="16,16,16,0"
+      <Border x:Name="StoryCard"
+              CornerRadius="20" Height="500" Background="{Binding BgColor}"
+              ClipToBounds="True"
+              BorderBrush="#22ffffff" BorderThickness="1">
+        <Grid x:Name="StoryGrid">
+          <!-- Background image -->
+          <ctl:AsyncImage Source="{Binding ImageUrl}" IsVisible="{Binding HasImage}"/>
+
+          <!-- Subtle dark gradient at top + bottom for readability -->
+          <Border VerticalAlignment="Top" Height="120" CornerRadius="20,20,0,0">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#aa000000" Offset="0"/>
+                <GradientStop Color="#00000000" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+          </Border>
+          <Border VerticalAlignment="Bottom" Height="160" CornerRadius="0,0,20,20">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#00000000" Offset="0"/>
+                <GradientStop Color="#bb000000" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+          </Border>
+
+          <!-- Author bar (top) -->
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="16,14,60,0"
                       VerticalAlignment="Top">
-            <Border Width="34" Height="34" CornerRadius="17"
+            <Border Width="36" Height="36" CornerRadius="18"
                     Background="{Binding AccentColor}">
-              <TextBlock Text="{Binding AuthorName[0]}" Foreground="{DynamicResource AppTextBrush}"
-                         FontWeight="Bold" FontSize="14"
+              <TextBlock Text="{Binding AuthorName[0]}" Foreground="White"
+                         FontWeight="Bold" FontSize="15"
                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
-            <StackPanel VerticalAlignment="Center" Spacing="1">
-              <TextBlock Text="{Binding AuthorAt}" Foreground="{DynamicResource AppTextBrush}"
-                         FontSize="13" FontWeight="SemiBold"/>
-              <TextBlock Text="{Binding TimeLabel}" Foreground="#aaaaaa" FontSize="11"/>
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+              <TextBlock Text="{Binding AuthorAt}" Foreground="White"
+                         FontSize="14" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding TimeLabel}" Foreground="#cccccc" FontSize="11"/>
             </StackPanel>
           </StackPanel>
 
-          <!-- Story text -->
-          <TextBlock Text="{Binding StoryText}" Foreground="{DynamicResource AppTextBrush}"
-                     FontSize="22" FontWeight="Medium"
-                     TextWrapping="Wrap" TextAlignment="Center"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"
-                     Margin="28"/>
+          <!-- Story text overlay (position/scale/rotation applied in code-behind) -->
+          <Border x:Name="TextOverlay"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  RenderTransformOrigin="50%,50%"
+                  Background="#55000000" CornerRadius="12" Padding="18,10"
+                  MaxWidth="380"
+                  IsVisible="{Binding StoryText,
+                  Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <Border.RenderTransform>
+              <RotateTransform Angle="0"/>
+            </Border.RenderTransform>
+            <TextBlock x:Name="OverlayText"
+                       Text="{Binding StoryText}" Foreground="White"
+                       FontSize="22" FontWeight="SemiBold"
+                       TextWrapping="Wrap" TextAlignment="Center"/>
+          </Border>
+
+          <!-- Tagged users (bottom) -->
+          <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                      Margin="16,0,16,20" Spacing="6"
+                      IsVisible="{Binding HasTaggedUsers}">
+            <StackPanel Orientation="Horizontal" Spacing="6"
+                        HorizontalAlignment="Center">
+              <TextBlock Text="with" Foreground="#bbbbbb" FontSize="12"
+                         VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding TaggedUsersLabel}" Foreground="#a78bfa"
+                         FontSize="13" FontWeight="SemiBold"
+                         TextWrapping="Wrap" TextAlignment="Center"/>
+            </StackPanel>
+          </StackPanel>
 
           <!-- Nav buttons -->
           <Button Click="OnPrev" IsVisible="{Binding HasPrev}"
                   Classes="navOverlay" HorizontalAlignment="Left"
-                  VerticalAlignment="Center" Content="‹" FontSize="28"/>
+                  VerticalAlignment="Center" Content="‹" FontSize="32"/>
           <Button Click="OnNext" IsVisible="{Binding HasNext}"
                   Classes="navOverlay" HorizontalAlignment="Right"
-                  VerticalAlignment="Center" Content="›" FontSize="28"/>
+                  VerticalAlignment="Center" Content="›" FontSize="32"/>
 
           <!-- Close -->
           <Button Click="OnClose" Classes="closeBtn"
@@ -60,20 +110,24 @@
 
   <UserControl.Styles>
     <Style Selector="Button.navOverlay">
-      <Setter Property="Background" Value="#40000000"/>
+      <Setter Property="Background" Value="#33000000"/>
       <Setter Property="Foreground" Value="White"/>
-      <Setter Property="Padding" Value="14,20"/>
+      <Setter Property="Padding" Value="16,28"/>
       <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
+    <Style Selector="Button.navOverlay:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#55000000"/>
+    </Style>
     <Style Selector="Button.closeBtn">
-      <Setter Property="Background" Value="#40000000"/>
+      <Setter Property="Background" Value="#44000000"/>
       <Setter Property="Foreground" Value="White"/>
-      <Setter Property="Padding" Value="8,6"/>
-      <Setter Property="CornerRadius" Value="14"/>
+      <Setter Property="Padding" Value="9,7"/>
+      <Setter Property="CornerRadius" Value="16"/>
       <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

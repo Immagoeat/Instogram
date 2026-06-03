@@ -75,6 +75,30 @@
       <Setter Property="Padding" Value="12,8"/>
       <Setter Property="CornerRadius" Value="8"/>
     </Style>
+    <Style Selector="TextBox.searchInput /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.searchInput:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.searchInput:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.searchInput:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#1a1a1a"/>
+      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="BoxShadow" Value="none"/>
+    </Style>
+    <Style Selector="TextBox.searchInput /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
     <Style Selector="Button.searchBtn">
       <Setter Property="Background" Value="#8b5cf6"/>
       <Setter Property="Foreground" Value="White"/>
