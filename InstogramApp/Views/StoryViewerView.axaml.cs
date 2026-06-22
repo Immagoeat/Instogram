@@ -1,8 +1,10 @@
+using System;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using InstogramApp.ViewModels;
 
@@ -10,10 +12,19 @@ namespace InstogramApp.Views;
 
 public partial class StoryViewerView : UserControl
 {
+    private DispatcherTimer? _timer;
+    private double _timerProgress;   // 0.0 → 1.0 over 5 seconds
+    private const double TickMs  = 50;
+    private const double TotalMs = 5000;
+
+    // per-segment track + fill borders (index = story index)
+    private Border[] _trackBorders = [];
+    private Border[] _fillBorders  = [];
+
     public StoryViewerView()
     {
         InitializeComponent();
-        DataContextChanged += (_, _) => SubscribeToVm();
+        DataContextChanged += (_, _) => { SubscribeToVm(); BuildProgressBars(); RestartTimer(); };
     }
 
     // ── Command dispatch (supports both local and server VM) ──────────────────
@@ -25,9 +36,117 @@ public partial class StoryViewerView : UserControl
     IRelayCommand CloseCmd => DataContext is ServerStoryViewerViewModel sv3
         ? sv3.CloseCommand : ((StoryViewerViewModel)DataContext!).CloseCommand;
 
-    void OnPrev(object? s, RoutedEventArgs e)  => PrevCmd.Execute(null);
-    void OnNext(object? s, RoutedEventArgs e)  => NextCmd.Execute(null);
-    void OnClose(object? s, RoutedEventArgs e) => CloseCmd.Execute(null);
+    void OnPrev(object? s, RoutedEventArgs e)  { PrevCmd.Execute(null);  _timerProgress = 0; UpdateProgressBars(); }
+    void OnNext(object? s, RoutedEventArgs e)  { NextCmd.Execute(null);  _timerProgress = 0; UpdateProgressBars(); }
+    void OnClose(object? s, RoutedEventArgs e) { StopTimer(); CloseCmd.Execute(null); }
+
+    // ── Auto-scroll timer ─────────────────────────────────────────────────────
+
+    private void RestartTimer()
+    {
+        StopTimer();
+        _timerProgress = 0;
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TickMs) };
+        _timer.Tick += OnTimerTick;
+        _timer.Start();
+    }
+
+    private void StopTimer()
+    {
+        _timer?.Stop();
+        _timer = null;
+    }
+
+    private void OnTimerTick(object? sender, EventArgs e)
+    {
+        _timerProgress += TickMs / TotalMs;
+        if (_timerProgress >= 1.0)
+        {
+            _timerProgress = 0;
+            var hasNext = DataContext is ServerStoryViewerViewModel sv2
+                ? sv2.HasNext : DataContext is StoryViewerViewModel lv ? lv.HasNext : false;
+            if (hasNext)
+                NextCmd.Execute(null);
+            else
+            {
+                StopTimer();
+                _timerProgress = 1.0;
+            }
+        }
+        UpdateProgressBars();
+    }
+
+    // ── Progress bar segments ─────────────────────────────────────────────────
+
+    private void BuildProgressBars()
+    {
+        if (ProgressBars == null) return;
+        ProgressBars.Children.Clear();
+
+        int total = DataContext is ServerStoryViewerViewModel sv
+            ? sv.TotalCount : DataContext is StoryViewerViewModel lv ? lv.TotalCount : 1;
+
+        _trackBorders = new Border[total];
+        _fillBorders  = new Border[total];
+
+        for (int i = 0; i < total; i++)
+        {
+            var fill = new Border
+            {
+                Height           = 3,
+                CornerRadius     = new CornerRadius(2),
+                Background       = Brushes.White,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                Width            = 0
+            };
+            var track = new Border
+            {
+                Height           = 3,
+                CornerRadius     = new CornerRadius(2),
+                Background       = new SolidColorBrush(Color.Parse("#44ffffff")),
+                ClipToBounds     = true,
+                Child            = fill
+            };
+            // tracks grow to fill available horizontal space equally
+            ProgressBars.Children.Add(track);
+            _trackBorders[i] = track;
+            _fillBorders[i]  = fill;
+        }
+        UpdateProgressBars();
+    }
+
+    private void UpdateProgressBars()
+    {
+        if (_trackBorders.Length == 0) return;
+        int total   = _trackBorders.Length;
+        int current = (DataContext is ServerStoryViewerViewModel sv
+            ? sv.CurrentIndex : DataContext is StoryViewerViewModel lv ? lv.CurrentIndex : 1) - 1;
+
+        // Calculate segment width: parent width minus gaps, divided evenly
+        double parentW = ProgressBars?.Bounds.Width > 0 ? ProgressBars.Bounds.Width : 440;
+        double gap     = 4.0 * (total - 1);
+        double segW    = System.Math.Max(4, (parentW - gap) / total);
+
+        for (int i = 0; i < total; i++)
+        {
+            var track = _trackBorders[i];
+            var fill  = _fillBorders[i];
+            track.Width = segW;
+            if (i < current)
+                fill.Width = segW;
+            else if (i == current)
+                fill.Width = segW * _timerProgress;
+            else
+                fill.Width = 0;
+        }
+    }
+
+    protected override void OnSizeChanged(SizeChangedEventArgs e)
+    {
+        base.OnSizeChanged(e);
+        UpdateProgressBars();
+        ApplyTextOverlay();
+    }
 
     // ── Text overlay positioning ──────────────────────────────────────────────
 
@@ -57,12 +176,15 @@ public partial class StoryViewerView : UserControl
                            or nameof(StoryViewerViewModel.TextScale)
                            or nameof(StoryViewerViewModel.StoryText))
             ApplyTextOverlay();
-    }
 
-    protected override void OnSizeChanged(SizeChangedEventArgs e)
-    {
-        base.OnSizeChanged(e);
-        ApplyTextOverlay();
+        // reset timer when story changes
+        if (e.PropertyName is nameof(ServerStoryViewerViewModel.CurrentIndex)
+                           or nameof(StoryViewerViewModel.CurrentIndex))
+        {
+            _timerProgress = 0;
+            UpdateProgressBars();
+            if (_timer == null) RestartTimer();
+        }
     }
 
     private void ApplyTextOverlay()
@@ -86,10 +208,8 @@ public partial class StoryViewerView : UserControl
         }
         else return;
 
-        // Apply font size scale
         OverlayText.FontSize = 22 * scale;
 
-        // Layout pass needed to get the overlay's rendered size; use last known or estimate
         var ow = TextOverlay.Bounds.Width  > 0 ? TextOverlay.Bounds.Width  : 160;
         var oh = TextOverlay.Bounds.Height > 0 ? TextOverlay.Bounds.Height : 48;
 

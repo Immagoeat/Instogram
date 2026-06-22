@@ -22,7 +22,7 @@ echo ""
 # Start the server
 cd "$(dirname "$0")/InstogramServer"
 ASPNETCORE_URLS="http://localhost:$PORT" \
-JWT_KEY="$JWT_KEY" \
+Jwt__Key="$JWT_KEY" \
     dotnet run --no-launch-profile &
 SERVER_PID=$!
 

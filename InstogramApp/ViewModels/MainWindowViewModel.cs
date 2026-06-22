@@ -16,6 +16,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public bool IsNotLoggedIn   => !IsLoggedIn;
     public bool HasNotifications => NotificationCount > 0;
+    [ObservableProperty] private bool _isMaster;
 
     // Sidebar avatar
     [ObservableProperty] private string _sidebarAvatarPath  = "";
@@ -35,6 +36,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void OnServerLogin(string username, string displayName)
     {
         IsLoggedIn = true;
+        IsMaster   = AppState.Instance.ServerIsMaster;
         OnPropertyChanged(nameof(IsNotLoggedIn));
         LoggedInAs      = $"@{username}";
         LoggedInDisplay = displayName;
@@ -83,6 +85,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AppState.Instance.CurrentUser  = null;
         ServerConfig.Clear();
         IsLoggedIn = false;
+        IsMaster   = false;
         OnPropertyChanged(nameof(IsNotLoggedIn));
         LoggedInAs = ""; LoggedInDisplay = "";
         NotificationCount = 0;
@@ -101,6 +104,7 @@ public partial class MainWindowViewModel : ViewModelBase
         else
             Navigate(new ProfileViewModel(this, AppState.Instance.CurrentUser!));
     }
+    [RelayCommand] void GoAdmin()          => Navigate(new AdminViewModel(this));
     [RelayCommand] void GoDMs()           => Navigate(new DMListViewModel(this));
     [RelayCommand] void GoNotifications() => Navigate(new NotificationsViewModel(this));
     [RelayCommand] void GoNewStory()      => Navigate(new StoryComposeViewModel(this));

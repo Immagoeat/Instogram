@@ -5,7 +5,7 @@
   <Grid RowDefinitions="Auto,*">
 
     <!-- ── Top bar with search ───────────────────────────────────────────── -->
-    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="24,16"
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="28,18"
             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
       <StackPanel Spacing="14">
 
@@ -13,12 +13,21 @@
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Grid.Column="0" Spacing="2">
             <TextBlock Text="Explore" Foreground="{DynamicResource AppTextBrush}"
-                       FontSize="22" FontWeight="Bold"/>
+                       FontSize="24" FontWeight="Bold" LetterSpacing="0.2"/>
             <TextBlock Text="Search posts, people, and tags"
-                       Foreground="#555555" FontSize="12"/>
+                       Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
           </StackPanel>
-          <Button Grid.Column="1" Click="OnRefresh" Content="↻  Refresh"
-                  Classes="tabBtn" VerticalAlignment="Center"/>
+          <Button Grid.Column="1" Click="OnRefresh" Classes="tabBtn" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Viewbox Width="13" Height="13">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="{DynamicResource NavIconBrush}"
+                        Data="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </Canvas>
+              </Viewbox>
+              <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
         </Grid>
 
         <!-- Search box -->
@@ -28,10 +37,15 @@
                    PlaceholderText="Search posts, people, #tags…"
                    Classes="searchBox"/>
           <Border Grid.Column="1" Background="{DynamicResource AppInputBrush}"
-                  CornerRadius="0,10,10,0" Padding="14,0" Margin="-2,0,0,0"
-                  VerticalAlignment="Stretch">
-            <TextBlock Text="⌕" Foreground="#666666" FontSize="18"
-                       VerticalAlignment="Center"/>
+                  CornerRadius="0,12,12,0" Padding="14,0" Margin="-2,0,0,0"
+                  VerticalAlignment="Stretch"
+                  BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1,1,1,1">
+            <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+              <Canvas Width="24" Height="24">
+                <Path Fill="{DynamicResource AppSubtextBrush}"
+                      Data="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </Canvas>
+            </Viewbox>
           </Border>
         </Grid>
 
@@ -77,7 +91,7 @@
 
           <!-- Trending tags section -->
           <StackPanel IsVisible="{Binding ShowTrending}" Spacing="12" Margin="0,0,0,24">
-            <TextBlock Text="TRENDING" Foreground="#555555" FontSize="11"
+            <TextBlock Text="TRENDING" Foreground="{DynamicResource AppSubtextBrush}" FontSize="11"
                        FontWeight="SemiBold" LetterSpacing="0.8"/>
             <ItemsControl ItemsSource="{Binding TrendingTags}">
               <ItemsControl.ItemsPanel>
@@ -91,7 +105,7 @@
                       <TextBlock Text="{Binding Label}"
                                  Foreground="#a78bfa" FontSize="13" FontWeight="SemiBold"/>
                       <TextBlock Text="{Binding CountLabel}"
-                                 Foreground="#555555" FontSize="11"/>
+                                 Foreground="{DynamicResource AppSubtextBrush}" FontSize="11"/>
                     </StackPanel>
                   </Button>
                 </DataTemplate>
@@ -109,12 +123,26 @@
 
           <!-- No results -->
           <StackPanel IsVisible="{Binding NoPostResults}" HorizontalAlignment="Center"
-                      Spacing="10" Margin="0,60">
-            <TextBlock Text="✦" FontSize="28" Foreground="#2a2a2a" HorizontalAlignment="Center"/>
-            <TextBlock Text="No posts found" Foreground="#3a3a3a"
+                      Spacing="12" Margin="0,60">
+            <Border Width="56" Height="56" CornerRadius="28" HorizontalAlignment="Center">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                  <GradientStop Color="#1e1040" Offset="0"/>
+                  <GradientStop Color="#1a0f2e" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.Background>
+              <Viewbox Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="{DynamicResource AppSubtextBrush}"
+                        Data="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </Canvas>
+              </Viewbox>
+            </Border>
+            <TextBlock Text="No posts found" Foreground="{DynamicResource AppSubtextBrush}"
                        FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
             <TextBlock Text="Try a different search or tag."
-                       Foreground="#2e2e2e" FontSize="13" HorizontalAlignment="Center"/>
+                       Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"
+                       HorizontalAlignment="Center" Opacity="0.7"/>
           </StackPanel>
 
           <!-- Post cards -->
@@ -147,12 +175,26 @@
 
           <!-- No results -->
           <StackPanel IsVisible="{Binding NoPeopleResults}" HorizontalAlignment="Center"
-                      Spacing="10" Margin="0,60">
-            <TextBlock Text="— — —" FontSize="18" Foreground="#333333" HorizontalAlignment="Center"/>
-            <TextBlock Text="No users found" Foreground="#3a3a3a"
+                      Spacing="12" Margin="0,60">
+            <Border Width="56" Height="56" CornerRadius="28" HorizontalAlignment="Center">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                  <GradientStop Color="#1e1040" Offset="0"/>
+                  <GradientStop Color="#1a0f2e" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.Background>
+              <Viewbox Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="{DynamicResource AppSubtextBrush}"
+                        Data="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </Canvas>
+              </Viewbox>
+            </Border>
+            <TextBlock Text="No users found" Foreground="{DynamicResource AppSubtextBrush}"
                        FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
             <TextBlock Text="Try searching by username or display name."
-                       Foreground="#2e2e2e" FontSize="13" HorizontalAlignment="Center"/>
+                       Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"
+                       HorizontalAlignment="Center" Opacity="0.7"/>
           </StackPanel>
 
           <!-- User rows -->
@@ -189,7 +231,7 @@
                         </Border>
                       </StackPanel>
                       <TextBlock Text="{Binding AtUsername}"
-                                 Foreground="#555555" FontSize="13"/>
+                                 Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
                     </StackPanel>
 
                     <!-- Actions -->
@@ -221,7 +263,7 @@
       <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
       <Setter Property="Padding" Value="16,11"/>
-      <Setter Property="CornerRadius" Value="10,0,0,10"/>
+      <Setter Property="CornerRadius" Value="12,0,0,12"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
     <Style Selector="TextBox.searchBox /template/ Border#PART_BorderElement">
@@ -241,7 +283,7 @@
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.searchBox /template/ TextBlock#PART_Watermark">
-      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
       <Setter Property="Opacity" Value="1"/>
     </Style>
     <Style Selector="Button.tabBtn">

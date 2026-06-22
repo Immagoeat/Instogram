@@ -1,14 +1,14 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Color x:Key="AppBg">#000000</Color>
-  <Color x:Key="AppSurface">#0d0d0d</Color>
-  <Color x:Key="AppCard">#111111</Color>
-  <Color x:Key="AppBorder">#1e1e1e</Color>
-  <Color x:Key="AppText">#ffffff</Color>
-  <Color x:Key="AppSubtext">#888888</Color>
-  <Color x:Key="AppAccent">#8b5cf6</Color>
-  <Color x:Key="AppAccentDim">#4c1d95</Color>
-  <Color x:Key="AppInput">#161616</Color>
+  <Color x:Key="AppSurface">#0a0a0f</Color>
+  <Color x:Key="AppCard">#0f0f1a</Color>
+  <Color x:Key="AppBorder">#1c1c30</Color>
+  <Color x:Key="AppText">#f5f2ff</Color>
+  <Color x:Key="AppSubtext">#6a6a88</Color>
+  <Color x:Key="AppAccent">#9d74ff</Color>
+  <Color x:Key="AppAccentDim">#3d1680</Color>
+  <Color x:Key="AppInput">#0d0d18</Color>
 
   <SolidColorBrush x:Key="AppBgBrush"      Color="{StaticResource AppBg}"/>
   <SolidColorBrush x:Key="AppSurfaceBrush" Color="{StaticResource AppSurface}"/>
@@ -16,6 +16,7 @@
   <SolidColorBrush x:Key="AppBorderBrush"  Color="{StaticResource AppBorder}"/>
   <SolidColorBrush x:Key="AppTextBrush"    Color="{StaticResource AppText}"/>
   <SolidColorBrush x:Key="AppSubtextBrush" Color="{StaticResource AppSubtext}"/>
+  <SolidColorBrush x:Key="NavIconBrush"    Color="#6a6a88"/>
   <SolidColorBrush x:Key="AppAccentBrush"  Color="{StaticResource AppAccent}"/>
   <SolidColorBrush x:Key="AppAccentDimBrush" Color="{StaticResource AppAccentDim}"/>
   <SolidColorBrush x:Key="AppInputBrush"   Color="{StaticResource AppInput}"/>

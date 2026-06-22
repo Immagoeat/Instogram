@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using InstogramServer.Data;
 using InstogramServer.Hubs;
 using InstogramServer.Models;
@@ -56,12 +57,21 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AutomodService>();
 
 var app = builder.Build();
 
 // ── Migrate ───────────────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
-    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+    // Add columns if upgrading an existing database
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Posts   ADD COLUMN VideoUrl  TEXT NOT NULL DEFAULT ''"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Stories ADD COLUMN VideoUrl  TEXT NOT NULL DEFAULT ''"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Users   ADD COLUMN IsBanned  INTEGER NOT NULL DEFAULT 0"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Users   ADD COLUMN BanReason TEXT    NOT NULL DEFAULT ''"); } catch { }
+}
 
 app.UseCors();
 app.UseAuthentication();
@@ -90,7 +100,7 @@ static object PostDto(Post p, Guid me) => new
     AuthorUsername = p.Author.Username,
     AuthorDisplayName = p.Author.DisplayName,
     AuthorAccent = p.Author.AccentColor,
-    p.Caption, p.Tags, p.ImageUrl, p.CreatedAt,
+    p.Caption, p.Tags, p.ImageUrl, p.VideoUrl, p.CreatedAt,
     LikeCount   = p.Likes.Count,
     IsLiked     = p.Likes.Any(l => l.UserId == me),
     Comments    = p.Comments.OrderBy(c => c.CreatedAt).Select(c => new
@@ -107,7 +117,7 @@ static object StoryDto(Story s, User author, bool hasSeen) => new
     AuthorUsername    = author.Username,
     AuthorDisplayName = author.DisplayName,
     AuthorAccent      = author.AccentColor,
-    s.Text, s.BackgroundColor, s.ImageUrl,
+    s.Text, s.BackgroundColor, s.ImageUrl, s.VideoUrl,
     s.TextX, s.TextY, s.TextScale, s.TextRotation, s.TaggedUsers,
     s.CreatedAt, s.ExpiresAt,
     HasSeen = hasSeen
@@ -162,6 +172,8 @@ auth.MapPost("/login", async (LoginRequest req, AppDbContext db, TokenService to
     var user = await db.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == normalized);
     if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
         return Results.Unauthorized();
+    if (user.IsBanned)
+        return Results.Problem($"Your account has been banned. Reason: {user.BanReason}", statusCode: 403);
     return Results.Ok(new { token = tokens.Generate(user), user = UserDto(user) });
 });
 
@@ -363,11 +375,20 @@ friends.MapGet("/list", async (HttpContext ctx, AppDbContext db) =>
 
 var posts = app.MapGroup("/posts").RequireAuthorization();
 
-posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db) =>
+posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
 {
     var me = TokenService.UserIdFromContext(ctx);
     var post = new Post { AuthorId = me, Caption = req.Caption.Trim(), Tags = req.Tags };
     db.Posts.Add(post);
+
+    // Automod scan
+    var hit = await automod.CheckAsync(req.Caption);
+    if (hit != null)
+    {
+        var actor2 = await db.Users.FindAsync(me);
+        await automod.FlagAsync(me, actor2?.Username ?? "?",
+            AutomodContentType.Post, post.Id, req.Caption, hit);
+    }
     var actor = await db.Users.FindAsync(me);
     var followerIds = await db.Follows
         .Where(f => f.FolloweeId == me)
@@ -474,7 +495,7 @@ posts.MapPost("/{id:guid}/like", async (Guid id, HttpContext ctx, AppDbContext d
     return Results.Ok(new { liked = !liked, count });
 });
 
-posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpContext ctx, AppDbContext db) =>
+posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
 {
     var me   = TokenService.UserIdFromContext(ctx);
     var post = await db.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
@@ -490,6 +511,13 @@ posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpCont
             Body = $"@{actor?.Username} commented: {(req.Text.Length > 40 ? req.Text[..37] + "…" : req.Text)}"
         });
     await db.SaveChangesAsync();
+
+    // Automod scan
+    var hit = await automod.CheckAsync(req.Text);
+    if (hit != null)
+        await automod.FlagAsync(me, actor?.Username ?? "?",
+            AutomodContentType.Comment, comment.Id, req.Text, hit);
+
     return Results.Ok(new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = actor?.Username, comment.Text, comment.CreatedAt });
 });
 
@@ -499,7 +527,7 @@ posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpCont
 
 var stories = app.MapGroup("/stories").RequireAuthorization();
 
-stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext db) =>
+stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
 {
     var me = TokenService.UserIdFromContext(ctx);
     var author = await db.Users.FindAsync(me);
@@ -517,6 +545,13 @@ stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext
     };
     db.Stories.Add(story);
     await db.SaveChangesAsync();
+
+    // Automod scan
+    var hit = await automod.CheckAsync(req.Text);
+    if (hit != null)
+        await automod.FlagAsync(me, author.Username,
+            AutomodContentType.Story, story.Id, req.Text, hit);
+
     return Results.Ok(StoryDto(story, author, false));
 });
 
@@ -540,6 +575,28 @@ stories.MapPost("/{id:guid}/image", async (Guid id, HttpContext ctx, AppDbContex
     story.ImageUrl = $"/images/{filename}";
     await db.SaveChangesAsync();
     return Results.Ok(new { imageUrl = story.ImageUrl });
+});
+
+stories.MapPost("/{id:guid}/video", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    var me    = TokenService.UserIdFromContext(ctx);
+    var story = await db.Stories.FindAsync(id);
+    if (story == null || story.AuthorId != me) return Results.NotFound();
+
+    var form = await ctx.Request.ReadFormAsync();
+    var file = form.Files.GetFile("file");
+    if (file == null) return Results.BadRequest("No file");
+    if (file.Length > 100 * 1024 * 1024) return Results.BadRequest("File too large (max 100 MB)");
+
+    var ext      = Path.GetExtension(file.FileName).ToLowerInvariant();
+    var filename = $"story_vid_{id:N}{ext}";
+    var dest     = Path.Combine(imageDir, filename);
+    await using var fs = File.Create(dest);
+    await file.CopyToAsync(fs);
+
+    story.VideoUrl = $"/images/{filename}";
+    await db.SaveChangesAsync();
+    return Results.Ok(new { videoUrl = story.VideoUrl });
 });
 
 stories.MapGet("/feed", async (HttpContext ctx, AppDbContext db) =>
@@ -724,6 +781,9 @@ app.MapGet("/images/{filename}", (string filename) =>
              : ext == ".png"            ? "image/png"
              : ext == ".gif"            ? "image/gif"
              : ext == ".webp"           ? "image/webp"
+             : ext == ".mp4"            ? "video/mp4"
+             : ext == ".webm"           ? "video/webm"
+             : ext == ".mov"            ? "video/quicktime"
              : "application/octet-stream";
     return Results.File(path, mime);
 });
@@ -748,6 +808,72 @@ posts.MapPost("/{id:guid}/image", async (Guid id, HttpContext ctx, AppDbContext 
     post.ImageUrl = $"/images/{filename}";
     await db.SaveChangesAsync();
     return Results.Ok(new { imageUrl = post.ImageUrl });
+});
+
+posts.MapPost("/{id:guid}/video", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    var me   = TokenService.UserIdFromContext(ctx);
+    var post = await db.Posts.FindAsync(id);
+    if (post == null || post.AuthorId != me) return Results.NotFound();
+
+    var form = await ctx.Request.ReadFormAsync();
+    var file = form.Files.GetFile("file");
+    if (file == null) return Results.BadRequest("No file");
+    if (file.Length > 100 * 1024 * 1024) return Results.BadRequest("File too large (max 100 MB)");
+
+    var ext      = Path.GetExtension(file.FileName).ToLowerInvariant();
+    var filename = $"post_vid_{id:N}{ext}";
+    var dest     = Path.Combine(imageDir, filename);
+    await using var fs = File.Create(dest);
+    await file.CopyToAsync(fs);
+
+    post.VideoUrl = $"/images/{filename}";
+    await db.SaveChangesAsync();
+    return Results.Ok(new { videoUrl = post.VideoUrl });
+});
+
+// Delete a post (author or master only)
+posts.MapDelete("/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    var me   = TokenService.UserIdFromContext(ctx);
+    var user = await db.Users.FindAsync(me);
+    var post = await db.Posts.FindAsync(id);
+    if (post == null) return Results.NotFound();
+    if (post.AuthorId != me && user?.IsMaster != true) return Results.Forbid();
+    db.Posts.Remove(post);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+// Report a post
+posts.MapPost("/{id:guid}/report", async (Guid id, ReportRequest req, HttpContext ctx, AppDbContext db) =>
+{
+    var me   = TokenService.UserIdFromContext(ctx);
+    var post = await db.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
+    if (post == null) return Results.NotFound();
+    var actor = await db.Users.FindAsync(me);
+    // Notify all masters about the report
+    var masters = await db.Users.Where(u => u.IsMaster).Select(u => u.Id).ToListAsync();
+    foreach (var masterId in masters)
+        db.Notifications.Add(new Notification
+        {
+            RecipientId = masterId, ActorId = me, Type = "report",
+            RelatedPostId = id,
+            Body = $"@{actor?.Username} reported a post by @{post.Author?.Username}: \"{req.Reason}\""
+        });
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+// Delete own account
+users.MapDelete("/me", async (HttpContext ctx, AppDbContext db) =>
+{
+    var me   = TokenService.UserIdFromContext(ctx);
+    var user = await db.Users.FindAsync(me);
+    if (user == null) return Results.NotFound();
+    db.Users.Remove(user);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -787,6 +913,141 @@ users.MapPost("/me/avatar", async (HttpContext ctx, AppDbContext db) =>
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
+// ADMIN / AUTOMOD  (master-only)
+// ═════════════════════════════════════════════════════════════════════════════
+
+var admin = app.MapGroup("/admin").RequireAuthorization();
+
+// Helper: verify caller is master
+static async Task<bool> IsMasterAsync(HttpContext ctx, AppDbContext db)
+{
+    var me = await db.Users.FindAsync(TokenService.UserIdFromContext(ctx));
+    return me?.IsMaster == true;
+}
+
+// ── Banned word list ──────────────────────────────────────────────────────────
+
+admin.MapGet("/words", async (HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var words = await db.BannedWords.OrderBy(w => w.Word).ToListAsync();
+    return Results.Ok(words.Select(w => new { w.Id, w.Word, w.AddedBy, w.AddedAt }));
+});
+
+admin.MapPost("/words", async (AddWordRequest req, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var me = await db.Users.FindAsync(TokenService.UserIdFromContext(ctx));
+    var word = req.Word.Trim().ToLowerInvariant();
+    if (string.IsNullOrEmpty(word)) return Results.BadRequest("Empty word");
+    if (await db.BannedWords.AnyAsync(w => w.Word == word))
+        return Results.Conflict("Word already banned");
+    db.BannedWords.Add(new BannedWord { Word = word, AddedBy = me?.Username ?? "?" });
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+admin.MapDelete("/words/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var w = await db.BannedWords.FindAsync(id);
+    if (w == null) return Results.NotFound();
+    db.BannedWords.Remove(w);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+// ── Flag queue ────────────────────────────────────────────────────────────────
+
+admin.MapGet("/flags", async (HttpContext ctx, AppDbContext db, bool resolved = false) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var flags = await db.AutomodFlags
+        .Where(f => f.IsResolved == resolved)
+        .OrderByDescending(f => f.CreatedAt)
+        .ToListAsync();
+    return Results.Ok(flags.Select(f => new
+    {
+        f.Id, f.AuthorId, f.AuthorName,
+        ContentType = f.ContentType.ToString(),
+        f.ContentId, f.Snippet, f.MatchedWord,
+        f.IsResolved, f.ResolvedBy, f.Resolution, f.CreatedAt
+    }));
+});
+
+admin.MapPost("/flags/{id:guid}/resolve", async (Guid id, ResolveFlagRequest req, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var me   = await db.Users.FindAsync(TokenService.UserIdFromContext(ctx));
+    var flag = await db.AutomodFlags.FindAsync(id);
+    if (flag == null) return Results.NotFound();
+
+    flag.IsResolved = true;
+    flag.ResolvedBy = me?.Username ?? "?";
+    flag.Resolution = req.Resolution; // "dismissed" | "deleted"
+
+    if (req.Resolution == "deleted" && flag.ContentId.HasValue)
+    {
+        switch (flag.ContentType)
+        {
+            case AutomodContentType.Post:
+                var post = await db.Posts.FindAsync(flag.ContentId.Value);
+                if (post != null) db.Posts.Remove(post);
+                break;
+            case AutomodContentType.Story:
+                var story = await db.Stories.FindAsync(flag.ContentId.Value);
+                if (story != null) db.Stories.Remove(story);
+                break;
+            case AutomodContentType.Comment:
+                var comment = await db.Comments.FindAsync(flag.ContentId.Value);
+                if (comment != null) db.Comments.Remove(comment);
+                break;
+        }
+    }
+
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+// ── User management ───────────────────────────────────────────────────────────
+
+admin.MapGet("/users", async (HttpContext ctx, AppDbContext db, string? q = null) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var query = db.Users.AsQueryable();
+    if (!string.IsNullOrEmpty(q))
+        query = query.Where(u => u.Username.Contains(q) || u.DisplayName.Contains(q));
+    var users = await query.OrderBy(u => u.Username).Take(50).ToListAsync();
+    return Results.Ok(users.Select(u => new
+    {
+        u.Id, u.Username, u.DisplayName, u.IsVerified, u.IsMaster, u.IsBanned, u.BanReason, u.CreatedAt
+    }));
+});
+
+admin.MapPost("/users/{id:guid}/ban", async (Guid id, BanRequest req, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var target = await db.Users.FindAsync(id);
+    if (target == null) return Results.NotFound();
+    if (target.IsMaster) return Results.BadRequest("Cannot ban a master");
+    target.IsBanned   = true;
+    target.BanReason  = req.Reason;
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+admin.MapPost("/users/{id:guid}/unban", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var target = await db.Users.FindAsync(id);
+    if (target == null) return Results.NotFound();
+    target.IsBanned  = false;
+    target.BanReason = "";
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
 // SignalR hub
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -809,3 +1070,7 @@ record DmRequest(Guid TargetUserId);
 record GroupRequest(string Name, List<Guid> MemberIds);
 record RenameRequest(string Name);
 record AddMemberRequest(Guid UserId);
+record ReportRequest(string Reason);
+record AddWordRequest(string Word);
+record ResolveFlagRequest(string Resolution);
+record BanRequest(string Reason);

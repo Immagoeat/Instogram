@@ -21,6 +21,8 @@ public partial class ServerPostCardViewModel : ViewModelBase
     public string TimeLabel     => FormatAge(_post.CreatedAt);
     public string ImageUrl  => ResolveUrl(_post.ImageUrl);
     public bool   HasImage  => !string.IsNullOrEmpty(_post.ImageUrl);
+    public string VideoUrl  => ResolveUrl(_post.VideoUrl);
+    public bool   HasVideo  => !string.IsNullOrEmpty(_post.VideoUrl);
 
     private static string ResolveUrl(string? url)
     {
@@ -44,6 +46,11 @@ public partial class ServerPostCardViewModel : ViewModelBase
     [ObservableProperty] private List<string> _commentPreviews = new();
 
     public int CommentCount => _post.Comments?.Count() ?? 0;
+    public bool IsMyPost => AppState.Instance.ServerUserId == _post.AuthorId.ToString();
+    public bool IsNotMyPost => !IsMyPost;
+
+    [ObservableProperty] private bool   _menuOpen = false;
+    [ObservableProperty] private string _menuStatus = "";
 
     public ServerPostCardViewModel(PostDto post, MainWindowViewModel main)
     {
@@ -77,6 +84,36 @@ public partial class ServerPostCardViewModel : ViewModelBase
     {
         if (Guid.TryParse(_post.AuthorId.ToString(), out var id))
             _main.Navigate(new ServerProfileViewModel(_main, id));
+    }
+
+    [RelayCommand]
+    void ToggleMenu() => MenuOpen = !MenuOpen;
+
+    [RelayCommand]
+    void CloseMenu() => MenuOpen = false;
+
+    [RelayCommand]
+    void SharePost()
+    {
+        MenuOpen = false;
+        var url = ServerClient.Instance.BaseUrl.TrimEnd('/') + $"/posts/{_post.Id}";
+        MenuStatus = $"Link: {url}";
+    }
+
+    [RelayCommand]
+    async Task ReportPost()
+    {
+        MenuOpen = false;
+        await ServerClient.Instance.ReportPostAsync(_post.Id, "Reported by user");
+        MenuStatus = "Reported. Thank you.";
+    }
+
+    [RelayCommand]
+    async Task DeletePost()
+    {
+        MenuOpen = false;
+        var ok = await ServerClient.Instance.DeletePostAsync(_post.Id);
+        if (ok) MenuStatus = "deleted";
     }
 
     [RelayCommand]

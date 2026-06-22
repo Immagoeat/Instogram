@@ -38,6 +38,9 @@ public partial class NewPostViewModel : ViewModelBase
     [ObservableProperty] private bool   _isBusy;
     [ObservableProperty] private string _imagePath = "";
     [ObservableProperty] private bool   _hasImage;
+    [ObservableProperty] private string _videoPath = "";
+    [ObservableProperty] private bool   _hasVideo;
+    partial void OnVideoPathChanged(string value) { HasVideo = !string.IsNullOrEmpty(value); OnPropertyChanged(nameof(CanPickMedia)); }
 
     public ObservableCollection<TagChipViewModel> PremadeTags   { get; } = new();
     public ObservableCollection<TagChipViewModel> SuggestedTags { get; } = new();
@@ -93,7 +96,8 @@ public partial class NewPostViewModel : ViewModelBase
         }
     }
 
-    partial void OnImagePathChanged(string value) => HasImage = !string.IsNullOrEmpty(value);
+    partial void OnImagePathChanged(string value) { HasImage = !string.IsNullOrEmpty(value); OnPropertyChanged(nameof(CanPickMedia)); }
+    public bool CanPickMedia => !HasImage && !HasVideo;
 
     [RelayCommand]
     async Task PickImage()
@@ -124,11 +128,42 @@ public partial class NewPostViewModel : ViewModelBase
     [RelayCommand] void RemoveImage() => ImagePath = "";
 
     [RelayCommand]
+    async Task PickVideo()
+    {
+        var topLevel = Avalonia.Application.Current?.ApplicationLifetime
+            is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.MainWindow : null;
+        if (topLevel == null) return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(
+            new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Choose video",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new Avalonia.Platform.Storage.FilePickerFileType("Videos")
+                    {
+                        Patterns  = ["*.mp4", "*.webm", "*.mov", "*.avi", "*.mkv"],
+                        MimeTypes = ["video/*"]
+                    }
+                ]
+            });
+        if (files.Count > 0)
+        {
+            VideoPath = files[0].Path.LocalPath;
+            ImagePath = ""; // clear image if video chosen
+        }
+    }
+
+    [RelayCommand] void RemoveVideo() => VideoPath = "";
+
+    [RelayCommand]
     async Task Submit()
     {
         var text = Caption.Trim();
-        if (string.IsNullOrEmpty(text) && !HasImage)
-        { Status = "Add a caption or image first."; return; }
+        if (string.IsNullOrEmpty(text) && !HasImage && !HasVideo)
+        { Status = "Add a caption, image, or video first."; return; }
 
         var tags = string.Join(",", Regex.Matches(text, @"#(\w+)")
             .Select(m => m.Groups[1].Value.ToLower())
@@ -146,9 +181,15 @@ public partial class NewPostViewModel : ViewModelBase
                 Status = "Uploading image…";
                 await ServerClient.Instance.UploadPostImageAsync(post.Id, ImagePath);
             }
+            else if (HasVideo)
+            {
+                Status = "Uploading video…";
+                await ServerClient.Instance.UploadPostVideoAsync(post.Id, VideoPath);
+            }
 
             Caption   = "";
             ImagePath = "";
+            VideoPath = "";
             _main.Navigate(new FeedViewModel(_main));
         }
         catch { Status = "Could not reach server."; }

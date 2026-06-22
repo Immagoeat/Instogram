@@ -1,0 +1,374 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:InstogramApp.ViewModels"
+             x:Class="InstogramApp.Views.AdminView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- ── Header ───────────────────────────────────────────────────────────── -->
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1"
+            Padding="20,16">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Grid.Column="0" Click="OnBack" Classes="backBtn" Padding="8,8">
+          <Viewbox Width="18" Height="18">
+            <Canvas Width="24" Height="24">
+              <Path Fill="{DynamicResource AppSubtextBrush}"
+                    Data="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </Canvas>
+          </Viewbox>
+        </Button>
+        <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="2">
+          <TextBlock Text="Admin Panel" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="22" FontWeight="Bold" LetterSpacing="0.2"/>
+          <TextBlock Text="Automod · Banned words · User management"
+                     Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
+        </StackPanel>
+        <Border Grid.Column="2" Width="36" Height="36" CornerRadius="10" Background="#1a120a">
+          <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Canvas Width="24" Height="24">
+              <Path Fill="#f59e0b"
+                    Data="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+            </Canvas>
+          </Viewbox>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- ── TabControl ───────────────────────────────────────────────────────── -->
+    <TabControl Grid.Row="1" SelectedIndex="{Binding TabIndex}"
+                Background="{DynamicResource AppBgBrush}">
+
+      <!-- ── Flagged content ─────────────────────────────────────────────── -->
+      <TabItem Header="🚩  Flagged">
+        <ScrollViewer>
+          <StackPanel MaxWidth="820" HorizontalAlignment="Center"
+                      Margin="24,20,24,32" Spacing="16">
+
+            <!-- Controls row -->
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Text="Flag Queue" Foreground="{DynamicResource AppTextBrush}"
+                           FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <CheckBox IsChecked="{Binding ShowResolved}"
+                          Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"
+                          Content="Show resolved"/>
+                <Button Click="OnRefreshFlags" Classes="ghostBtn" Padding="10,7">
+                  <Viewbox Width="14" Height="14">
+                    <Canvas Width="24" Height="24">
+                      <Path Fill="{DynamicResource AppSubtextBrush}"
+                            Data="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </Canvas>
+                  </Viewbox>
+                </Button>
+              </StackPanel>
+            </Grid>
+
+            <TextBlock Text="{Binding FlagsStatus}" Foreground="{DynamicResource AppAccentBrush}"
+                       FontSize="13"
+                       IsVisible="{Binding FlagsStatus,
+                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding FlagsBusy}"
+                         Height="3" Foreground="{DynamicResource AppAccentBrush}"
+                         Background="{DynamicResource AppInputBrush}" CornerRadius="2"/>
+
+            <!-- Flag rows -->
+            <ItemsControl ItemsSource="{Binding Flags}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:FlagRowViewModel}">
+                  <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14"
+                          BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                          Padding="20,16" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel Grid.Column="0" Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <Border Background="#33f87171" CornerRadius="6" Padding="7,3">
+                            <TextBlock Text="{Binding ContentType}" Foreground="#f87171"
+                                       FontSize="11" FontWeight="Bold"/>
+                          </Border>
+                          <TextBlock Text="{Binding AuthorName}"
+                                     Foreground="{DynamicResource AppTextBrush}"
+                                     FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                          <TextBlock Text="{Binding TimeLabel}"
+                                     Foreground="{DynamicResource AppSubtextBrush}"
+                                     FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Border Background="{DynamicResource AppInputBrush}" CornerRadius="8" Padding="12,8">
+                          <TextBlock Text="{Binding Snippet}"
+                                     Foreground="{DynamicResource AppTextBrush}"
+                                     FontSize="13" TextWrapping="Wrap"/>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <TextBlock Text="Matched:"
+                                     Foreground="{DynamicResource AppSubtextBrush}"
+                                     FontSize="12" VerticalAlignment="Center"/>
+                          <Border Background="#3d1515" CornerRadius="6" Padding="8,3">
+                            <TextBlock Text="{Binding MatchedWord}" Foreground="#fca5a5"
+                                       FontSize="12" FontWeight="SemiBold"/>
+                          </Border>
+                        </StackPanel>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Spacing="8"
+                                  VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Button Click="OnDismissFlag" Tag="{Binding}"
+                                Classes="ghostActionBtn" Content="Dismiss"/>
+                        <Button Click="OnDeleteFlag"  Tag="{Binding}"
+                                Classes="dangerActionBtn" Content="Delete"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ── Banned words ────────────────────────────────────────────────── -->
+      <TabItem Header="🚫  Banned Words">
+        <ScrollViewer>
+          <StackPanel MaxWidth="820" HorizontalAlignment="Center"
+                      Margin="24,20,24,32" Spacing="16">
+
+            <StackPanel Spacing="4">
+              <TextBlock Text="Banned Words" Foreground="{DynamicResource AppTextBrush}"
+                         FontSize="18" FontWeight="Bold"/>
+              <TextBlock Text="Posts, comments, and stories containing these words will be flagged for review."
+                         Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Add word card -->
+            <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14"
+                    BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                    Padding="20,16">
+              <StackPanel Spacing="10">
+                <TextBlock Text="ADD WORD" Foreground="{DynamicResource AppSubtextBrush}"
+                           FontSize="11" FontWeight="SemiBold" LetterSpacing="0.8"/>
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBox Grid.Column="0" Text="{Binding NewWord}"
+                           PlaceholderText="Enter word or phrase…"
+                           Classes="adminInput" Margin="0,0,10,0"/>
+                  <Button Grid.Column="1" Click="OnAddWord"
+                          Background="{DynamicResource AppAccentBrush}" Foreground="White"
+                          Padding="16,10" CornerRadius="10" FontSize="13" FontWeight="SemiBold"
+                          Cursor="Hand" BorderThickness="0" Content="Add"/>
+                </Grid>
+                <TextBlock Text="{Binding WordsStatus}"
+                           Foreground="{DynamicResource AppAccentBrush}" FontSize="12"
+                           IsVisible="{Binding WordsStatus,
+                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              </StackPanel>
+            </Border>
+
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding WordsBusy}"
+                         Height="3" Foreground="{DynamicResource AppAccentBrush}"
+                         Background="{DynamicResource AppInputBrush}" CornerRadius="2"/>
+
+            <!-- Word chips -->
+            <ItemsControl ItemsSource="{Binding Words}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:BannedWordRowViewModel}">
+                  <Border Background="{DynamicResource AppCardBrush}" CornerRadius="10"
+                          BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                          Padding="12,7" Margin="0,0,8,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Word}"
+                                 Foreground="{DynamicResource AppTextBrush}"
+                                 FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                      <TextBlock Text="{Binding AddedBy}"
+                                 Foreground="{DynamicResource AppSubtextBrush}"
+                                 FontSize="11" VerticalAlignment="Center"/>
+                      <Button Click="OnRemoveWord" Tag="{Binding}"
+                              Classes="chipRemoveBtn" Content="✕"/>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ── Users ───────────────────────────────────────────────────────── -->
+      <TabItem Header="👥  Users">
+        <ScrollViewer>
+          <StackPanel MaxWidth="820" HorizontalAlignment="Center"
+                      Margin="24,20,24,32" Spacing="16">
+
+            <TextBlock Text="User Management" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="18" FontWeight="Bold"/>
+
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBox Grid.Column="0" Text="{Binding UserSearch}"
+                       PlaceholderText="Search by username or display name…"
+                       Classes="adminInput" Margin="0,0,10,0"/>
+              <Button Grid.Column="1" Click="OnSearchUsers"
+                      Background="{DynamicResource AppAccentBrush}" Foreground="White"
+                      Padding="16,10" CornerRadius="10" FontSize="13" FontWeight="SemiBold"
+                      Cursor="Hand" BorderThickness="0" Content="Search"/>
+            </Grid>
+
+            <TextBlock Text="{Binding UsersStatus}"
+                       Foreground="{DynamicResource AppAccentBrush}" FontSize="13"
+                       IsVisible="{Binding UsersStatus,
+                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding UsersBusy}"
+                         Height="3" Foreground="{DynamicResource AppAccentBrush}"
+                         Background="{DynamicResource AppInputBrush}" CornerRadius="2"/>
+
+            <ItemsControl ItemsSource="{Binding AdminUsers}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:AdminUserRowViewModel}">
+                  <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14"
+                          BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                          Padding="18,14" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                              Background="{DynamicResource AppAccentBrush}">
+                        <TextBlock Text="{Binding DisplayName[0]}" Foreground="White"
+                                   FontWeight="Bold" FontSize="16"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center" Spacing="3">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <TextBlock Text="{Binding DisplayName}"
+                                     Foreground="{DynamicResource AppTextBrush}"
+                                     FontWeight="SemiBold" FontSize="14"/>
+                          <Border IsVisible="{Binding IsMaster}" Background="#33a855f7"
+                                  CornerRadius="6" Padding="6,2">
+                            <TextBlock Text="MASTER" Foreground="#a855f7"
+                                       FontSize="10" FontWeight="Bold"/>
+                          </Border>
+                          <Border IsVisible="{Binding IsBanned}" Background="#3d1515"
+                                  CornerRadius="6" Padding="6,2">
+                            <TextBlock Text="BANNED" Foreground="#f87171"
+                                       FontSize="10" FontWeight="Bold"/>
+                          </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Username}"
+                                   Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
+                        <TextBox IsVisible="{Binding !IsBanned}"
+                                 Text="{Binding BanReason}"
+                                 PlaceholderText="Ban reason…"
+                                 Classes="adminInput" MaxWidth="320" FontSize="12"
+                                 Margin="0,4,0,0"/>
+                        <TextBlock IsVisible="{Binding IsBanned}"
+                                   Text="{Binding BanReason, StringFormat='Reason: {0}'}"
+                                   Foreground="#f87171" FontSize="12" Margin="0,2,0,0"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
+                        <Button Click="OnBanUser"   Tag="{Binding}"
+                                IsVisible="{Binding !IsBanned}"
+                                Classes="dangerActionBtn" Content="Ban"/>
+                        <Button Click="OnUnbanUser" Tag="{Binding}"
+                                IsVisible="{Binding IsBanned}"
+                                Classes="ghostActionBtn" Content="Unban"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+    </TabControl>
+
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="TabControl">
+      <Setter Property="Background" Value="{DynamicResource AppBgBrush}"/>
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="18,12"/>
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.backBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.backBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+    </Style>
+    <Style Selector="Button.ghostBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.ghostActionBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="14,7"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.ghostActionBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+    </Style>
+    <Style Selector="Button.dangerActionBtn">
+      <Setter Property="Background" Value="#7f1d1d"/>
+      <Setter Property="Foreground" Value="#fecaca"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="14,7"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.dangerActionBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991b1b"/>
+    </Style>
+    <Style Selector="Button.chipRemoveBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#f87171"/>
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Padding" Value="2,0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="TextBox.adminInput">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="12,9"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="FontSize" Value="13"/>
+    </Style>
+    <Style Selector="TextBox.adminInput /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+    <Style Selector="TextBox.adminInput:focus-within /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+    </Style>
+    <Style Selector="TextBox.adminInput /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+  </UserControl.Styles>
+</UserControl>

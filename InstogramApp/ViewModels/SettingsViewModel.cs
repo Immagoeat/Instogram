@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InstogramApp.Services;
@@ -31,7 +32,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private AudioDeviceViewModel?  _selectedMic;
     [ObservableProperty] private AudioDeviceViewModel?  _selectedSpeaker;
     [ObservableProperty] private CameraDeviceViewModel? _selectedCamera;
-    [ObservableProperty] private string _statusText = "";
+    [ObservableProperty] private string _statusText        = "";
+    [ObservableProperty] private bool   _showDeleteConfirm = false;
+    [ObservableProperty] private string _deleteError       = "";
 
     public SettingsViewModel(MainWindowViewModel main)
     {
@@ -71,8 +74,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         try
         {
-            FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_FATAL,
-                "/usr/lib/x86_64-linux-gnu");
+            FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_FATAL, AppState.FfmpegLibPath);
 
             CameraDevices.Add(new CameraDeviceViewModel { Path = "", Name = "None" });
 
@@ -109,6 +111,22 @@ public partial class SettingsViewModel : ViewModelBase
         AppState.Instance.SpeakerDeviceIndex = SelectedSpeaker?.DeviceIndex ?? -1;
         AppState.Instance.CameraDevicePath   = SelectedCamera?.Path         ?? "";
         StatusText = "Saved.";
+    }
+
+    [RelayCommand]
+    void PromptDeleteAccount() => ShowDeleteConfirm = true;
+
+    [RelayCommand]
+    void CancelDeleteAccount() => ShowDeleteConfirm = false;
+
+    [RelayCommand]
+    async Task ConfirmDeleteAccount()
+    {
+        var ok = await ServerClient.Instance.DeleteAccountAsync();
+        if (ok)
+            _main.LogoutCommand.Execute(null);
+        else
+            DeleteError = "Could not delete account. Try again.";
     }
 
     [RelayCommand]

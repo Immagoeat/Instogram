@@ -3,19 +3,28 @@
              xmlns:vm="using:InstogramApp.ViewModels"
              x:Class="InstogramApp.Views.ThemePickerView">
 
-  <Grid Background="{DynamicResource AppBgBrush}" Margin="24">
-    <StackPanel MaxWidth="460" HorizontalAlignment="Center" Spacing="16">
+  <ScrollViewer>
+    <StackPanel MaxWidth="520" HorizontalAlignment="Center" Margin="32,28" Spacing="24">
 
       <!-- Header -->
-      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-        <Button Click="OnBack" Background="#01000000" BorderThickness="0"
-                Foreground="#8b5cf6" FontSize="20" Padding="0" Cursor="Hand"
-                Content="←"/>
-        <TextBlock Text="Choose Theme" Foreground="{DynamicResource AppTextBrush}"
-                   FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-      </StackPanel>
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Grid.Column="0" Click="OnBack" Classes="backBtn" Padding="8,8">
+          <Viewbox Width="18" Height="18">
+            <Canvas Width="24" Height="24">
+              <Path Fill="{DynamicResource AppSubtextBrush}"
+                    Data="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </Canvas>
+          </Viewbox>
+        </Button>
+        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
+          <TextBlock Text="Choose Theme" Foreground="{DynamicResource AppTextBrush}"
+                     FontSize="22" FontWeight="Bold"/>
+          <TextBlock Text="Pick a look that feels like you"
+                     Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
+        </StackPanel>
+      </Grid>
 
-      <!-- Theme list -->
+      <!-- Theme cards grid -->
       <ItemsControl ItemsSource="{Binding Themes}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
@@ -24,36 +33,61 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="{x:Type vm:ThemeOptionViewModel}">
-            <Button Click="OnSelectTheme" Margin="6" Padding="0"
+            <Button Click="OnSelectTheme" Margin="0,0,12,12" Padding="0"
                     Background="#01000000" BorderThickness="0" Cursor="Hand">
-              <Grid Width="150" Height="90">
-                <!-- Unselected card -->
-                <Border CornerRadius="12" Background="{DynamicResource AppInputBrush}"
-                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="2"
-                        IsVisible="{Binding IsNotSelected}">
-                  <TextBlock Text="{Binding Label}" Foreground="#aaaaaa"
-                             FontSize="14" FontWeight="Medium"
+              <Border Width="148" Height="110" CornerRadius="16"
+                      Background="{Binding PreviewBg}"
+                      BorderBrush="{Binding PreviewBorderColor}"
+                      BorderThickness="2.5">
+                <Grid RowDefinitions="Auto,*,Auto">
+                  <!-- Color strip preview at top (two-tone via nested borders) -->
+                  <Grid Grid.Row="0" Height="4">
+                    <Border CornerRadius="14,14,0,0"
+                            Background="{Binding PreviewAccent2}"/>
+                    <Border Width="74" HorizontalAlignment="Left"
+                            CornerRadius="14,0,0,0"
+                            Background="{Binding PreviewAccent}"/>
+                  </Grid>
+                  <!-- Theme name -->
+                  <TextBlock Grid.Row="1" Text="{Binding Label}"
+                             Foreground="{Binding PreviewText}"
+                             FontSize="15" FontWeight="SemiBold"
                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <!-- Selected card -->
-                <Border CornerRadius="12" Background="#1e1030"
-                        BorderBrush="#8b5cf6" BorderThickness="2"
-                        IsVisible="{Binding IsSelected}">
-                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource AppTextBrush}"
-                               FontSize="14" FontWeight="SemiBold"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="✓ Active" Foreground="#8b5cf6"
-                               FontSize="11" FontWeight="Bold"
-                               HorizontalAlignment="Center"/>
-                  </StackPanel>
-                </Border>
-              </Grid>
+                  <!-- Active badge -->
+                  <Border Grid.Row="2" IsVisible="{Binding IsSelected}"
+                          Background="{DynamicResource AppAccentBrush}" CornerRadius="0,0,14,14"
+                          Padding="0,4">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                      <Viewbox Width="10" Height="10">
+                        <Canvas Width="24" Height="24">
+                          <Path Fill="White"
+                                Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="Active" Foreground="White"
+                                 FontSize="11" FontWeight="Bold"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </Border>
+                </Grid>
+              </Border>
             </Button>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
     </StackPanel>
-  </Grid>
+  </ScrollViewer>
+
+  <UserControl.Styles>
+    <Style Selector="Button.backBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.backBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+    </Style>
+  </UserControl.Styles>
 </UserControl>

@@ -2,71 +2,117 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="InstogramApp.Views.AuthView">
 
-  <Grid Background="{DynamicResource AppBgBrush}">
+  <Grid>
+    <Grid.Background>
+      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#0d0d14" Offset="0"/>
+        <GradientStop Color="#130820" Offset="0.5"/>
+        <GradientStop Color="#0d0d14" Offset="1"/>
+      </LinearGradientBrush>
+    </Grid.Background>
+
     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
       <Grid VerticalAlignment="Center" HorizontalAlignment="Center"
-            Width="400" Margin="0,48,0,48">
-        <StackPanel Spacing="20">
+            Width="420" Margin="0,48,0,48">
+        <StackPanel Spacing="24">
 
           <!-- Brand -->
-          <StackPanel HorizontalAlignment="Center" Spacing="6" Margin="0,0,0,8">
+          <StackPanel HorizontalAlignment="Center" Spacing="10" Margin="0,0,0,8">
+            <Border Width="68" Height="68" CornerRadius="22" HorizontalAlignment="Center">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                  <GradientStop Color="#7c3aed" Offset="0"/>
+                  <GradientStop Color="#a855f7" Offset="0.5"/>
+                  <GradientStop Color="#ec4899" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.Background>
+              <Viewbox Width="34" Height="34" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="White"
+                        Data="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </Canvas>
+              </Viewbox>
+            </Border>
             <TextBlock Text="Instogram" FontSize="38" FontWeight="Bold"
-                       Foreground="{DynamicResource AppTextBrush}" HorizontalAlignment="Center"
-                       LetterSpacing="1"/>
-            <TextBlock Text="Share your world." FontSize="14" Foreground="#666666"
+                       Foreground="White" HorizontalAlignment="Center"
+                       LetterSpacing="0.3"/>
+            <TextBlock Text="Share your world." FontSize="14"
+                       Foreground="#7a6a9a"
                        HorizontalAlignment="Center" LetterSpacing="0.4"/>
           </StackPanel>
 
           <!-- Card -->
-          <Border Background="{DynamicResource AppCardBrush}" CornerRadius="20" Padding="32,28"
-                  BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
-            <StackPanel Spacing="14">
+          <Border CornerRadius="24" Padding="32,30"
+                  BorderThickness="1">
+            <Border.BorderBrush>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#2d2050" Offset="0"/>
+                <GradientStop Color="#3d1d50" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.BorderBrush>
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#14102a" Offset="0"/>
+                <GradientStop Color="#1a1030" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel Spacing="15">
 
-              <TextBlock Text="{Binding FormTitle}" Foreground="{DynamicResource AppTextBrush}"
-                         FontSize="20" FontWeight="SemiBold" Margin="0,0,0,6"/>
+              <TextBlock Text="{Binding FormTitle}" Foreground="White"
+                         FontSize="21" FontWeight="SemiBold" Margin="0,0,0,4"/>
 
-              <!-- Always shown -->
               <StackPanel Spacing="4">
-                <TextBlock Text="Username" Foreground="#777777" FontSize="11"
-                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBlock Text="Username" Foreground="#6a5a9a" FontSize="11"
+                           FontWeight="SemiBold" LetterSpacing="0.8" Margin="4,0,0,0"/>
                 <TextBox Text="{Binding Username}" PlaceholderText="your_username"
                          Classes="authInput"/>
               </StackPanel>
 
               <StackPanel Spacing="4">
-                <TextBlock Text="Password" Foreground="#777777" FontSize="11"
-                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBlock Text="Password" Foreground="#6a5a9a" FontSize="11"
+                           FontWeight="SemiBold" LetterSpacing="0.8" Margin="4,0,0,0"/>
                 <TextBox Text="{Binding Password}" PlaceholderText="••••••••"
                          PasswordChar="●" Classes="authInput"/>
               </StackPanel>
 
-              <!-- Register-only -->
               <StackPanel IsVisible="{Binding ShowRegister}" Spacing="4">
-                <TextBlock Text="Display Name" Foreground="#777777" FontSize="11"
-                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBlock Text="Display Name" Foreground="#6a5a9a" FontSize="11"
+                           FontWeight="SemiBold" LetterSpacing="0.8" Margin="4,0,0,0"/>
                 <TextBox Text="{Binding DisplayName}" PlaceholderText="Your Name"
                          Classes="authInput"/>
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowRegister}" Spacing="4">
-                <TextBlock Text="Email" Foreground="#777777" FontSize="11"
-                           FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                <TextBlock Text="Email" Foreground="#6a5a9a" FontSize="11"
+                           FontWeight="SemiBold" LetterSpacing="0.8" Margin="4,0,0,0"/>
                 <TextBox Text="{Binding Email}" PlaceholderText="hello@example.com"
                          Classes="authInput"/>
               </StackPanel>
 
               <!-- CAPTCHA -->
-              <StackPanel IsVisible="{Binding ShowRegister}" Spacing="8" Margin="0,4,0,0">
-                <Border Background="#0c0820" CornerRadius="12" Padding="16,14"
-                        BorderBrush="#2d1a5e" BorderThickness="1">
+              <StackPanel IsVisible="{Binding ShowRegister}" Spacing="8" Margin="0,2,0,0">
+                <Border CornerRadius="14" Padding="16,14"
+                        BorderThickness="1" BorderBrush="#2a1a60">
+                  <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                      <GradientStop Color="#0e0828" Offset="0"/>
+                      <GradientStop Color="#160a30" Offset="1"/>
+                    </LinearGradientBrush>
+                  </Border.Background>
                   <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Border Background="#2d1a5e" CornerRadius="6" Padding="6,3">
-                        <TextBlock Text="VERIFY" Foreground="#a78bfa"
-                                   FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
+                      <Border CornerRadius="6" Padding="8,3">
+                        <Border.Background>
+                          <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                            <GradientStop Color="#4c1d95" Offset="0"/>
+                            <GradientStop Color="#7c3aed" Offset="1"/>
+                          </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="VERIFY" Foreground="#d8b4fe"
+                                   FontSize="10" FontWeight="Bold" LetterSpacing="1.2"/>
                       </Border>
-                      <TextBlock Text="Prove you're human" Foreground="#888888" FontSize="12"
+                      <TextBlock Text="Prove you're human" Foreground="#6a5a9a" FontSize="12"
                                  VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Text="{Binding CaptchaQuestion}" Foreground="#e2d9f3"
@@ -74,17 +120,17 @@
                   </StackPanel>
                 </Border>
                 <StackPanel Spacing="4">
-                  <TextBlock Text="Your Answer" Foreground="#777777" FontSize="11"
-                             FontWeight="Medium" LetterSpacing="0.5" Margin="4,0,0,0"/>
+                  <TextBlock Text="Your Answer" Foreground="#6a5a9a" FontSize="11"
+                             FontWeight="SemiBold" LetterSpacing="0.8" Margin="4,0,0,0"/>
                   <TextBox Text="{Binding CaptchaAnswer}" PlaceholderText="Enter your answer"
                            Classes="authInput"/>
                 </StackPanel>
               </StackPanel>
 
               <!-- Server URL (collapsible) -->
-              <Border Background="{DynamicResource AppBgBrush}" CornerRadius="10" Padding="12,10"
-                      BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
-                      Margin="0,4,0,0">
+              <Border CornerRadius="12" Padding="14,12"
+                      BorderBrush="#1e1840" BorderThickness="1"
+                      Margin="0,4,0,0" Background="#0e0c20">
                 <StackPanel Spacing="8">
                   <Button Click="OnToggleServerUrl" Classes="linkBtn"
                           Content="{Binding ServerUrlToggleLabel}"
@@ -94,7 +140,7 @@
                              PlaceholderText="http://localhost:5000"
                              Classes="authInput"/>
                     <TextBlock Text="{Binding ServerStatus}"
-                               Foreground="#7c6aab" FontSize="11"
+                               Foreground="#8b5cf6" FontSize="11"
                                IsVisible="{Binding ServerStatus,
                                Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                Margin="4,0,0,0"/>
@@ -104,17 +150,26 @@
 
               <!-- Busy spinner -->
               <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}"
-                           Height="3" Foreground="#8b5cf6"
-                           Background="{DynamicResource AppInputBrush}"
-                           CornerRadius="2"/>
+                           Height="3" CornerRadius="2">
+                <ProgressBar.Foreground>
+                  <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                    <GradientStop Color="#8b5cf6" Offset="0"/>
+                    <GradientStop Color="#ec4899" Offset="1"/>
+                  </LinearGradientBrush>
+                </ProgressBar.Foreground>
+                <ProgressBar.Background>
+                  <SolidColorBrush Color="#1a1030"/>
+                </ProgressBar.Background>
+              </ProgressBar>
 
               <!-- Error -->
-              <Border Background="#180a0a" CornerRadius="10" Padding="14,11"
+              <Border CornerRadius="12" Padding="14,12"
                       BorderBrush="#3d1515" BorderThickness="1"
                       IsVisible="{Binding ErrorMessage,
-                      Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                      Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                      Background="#140808">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                  <TextBlock Text="✕" Foreground="#ff6b6b" FontWeight="Bold" FontSize="12"
+                  <TextBlock Text="✕" Foreground="#ff6b6b" FontWeight="Bold" FontSize="13"
                              VerticalAlignment="Top" Margin="0,1,0,0"/>
                   <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080"
                              FontSize="13" TextWrapping="Wrap"/>
@@ -134,12 +189,12 @@
           <!-- Toggle link -->
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
             <TextBlock IsVisible="{Binding ShowLogin}" Text="New to Instogram?"
-                       Foreground="#555555" FontSize="13" VerticalAlignment="Center"/>
+                       Foreground="#4a4060" FontSize="13" VerticalAlignment="Center"/>
             <Button Click="OnToggleRegister" IsVisible="{Binding ShowLogin}"
                     Classes="linkBtn" Content="Create an account"/>
 
             <TextBlock IsVisible="{Binding ShowRegister}" Text="Already have an account?"
-                       Foreground="#555555" FontSize="13" VerticalAlignment="Center"/>
+                       Foreground="#4a4060" FontSize="13" VerticalAlignment="Center"/>
             <Button Click="OnToggleRegister" IsVisible="{Binding ShowRegister}"
                     Classes="linkBtn" Content="Log in"/>
           </StackPanel>
@@ -151,46 +206,65 @@
 
   <UserControl.Styles>
     <Style Selector="TextBox.authInput">
-      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
-      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Background" Value="#0e0c22"/>
+      <Setter Property="Foreground" Value="#e8e0ff"/>
+      <Setter Property="BorderBrush" Value="#2d2250"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
     <Style Selector="TextBox.authInput /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Background" Value="#0e0c22"/>
     </Style>
     <Style Selector="TextBox.authInput:pointerover /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Background" Value="#0e0c22"/>
+      <Setter Property="BorderBrush" Value="#4a3880"/>
     </Style>
     <Style Selector="TextBox.authInput:focus /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Background" Value="#0e0c22"/>
+      <Setter Property="BorderBrush" Value="#8b5cf6"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.authInput:focus-within /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Background" Value="#0e0c22"/>
+      <Setter Property="BorderBrush" Value="#8b5cf6"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.authInput /template/ TextBlock#PART_Watermark">
-      <Setter Property="Foreground" Value="#555555"/>
+      <Setter Property="Foreground" Value="#4a3870"/>
       <Setter Property="Opacity" Value="1"/>
     </Style>
     <Style Selector="Button.primaryBtn">
-      <Setter Property="Background" Value="#7c3aed"/>
       <Setter Property="Foreground" Value="White"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="FontSize" Value="15"/>
-      <Setter Property="Padding" Value="14,13"/>
-      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Padding" Value="14,14"/>
+      <Setter Property="CornerRadius" Value="14"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="BorderThickness" Value="0"/>
     </Style>
+    <Style Selector="Button.primaryBtn /template/ ContentPresenter">
+      <Setter Property="Background">
+        <Setter.Value>
+          <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+            <GradientStop Color="#7c3aed" Offset="0"/>
+            <GradientStop Color="#a855f7" Offset="0.5"/>
+            <GradientStop Color="#ec4899" Offset="1"/>
+          </LinearGradientBrush>
+        </Setter.Value>
+      </Setter>
+    </Style>
     <Style Selector="Button.primaryBtn:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#6d28d9"/>
+      <Setter Property="Background">
+        <Setter.Value>
+          <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+            <GradientStop Color="#6d28d9" Offset="0"/>
+            <GradientStop Color="#9333ea" Offset="0.5"/>
+            <GradientStop Color="#db2777" Offset="1"/>
+          </LinearGradientBrush>
+        </Setter.Value>
+      </Setter>
     </Style>
     <Style Selector="Button.linkBtn">
       <Setter Property="Background" Value="#01000000"/>
@@ -200,6 +274,9 @@
       <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="Padding" Value="4,4"/>
       <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.linkBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="TextElement.Foreground" Value="#a78bfa"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

@@ -12,26 +12,27 @@
           <StackPanel Spacing="4">
             <TextBlock Text="Create Post" Foreground="{DynamicResource AppTextBrush}"
                        FontSize="24" FontWeight="Bold"/>
-            <TextBlock Text="Share something with the world" Foreground="#555555" FontSize="13"/>
+            <TextBlock Text="Share something with the world" Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
           </StackPanel>
 
           <Border Height="1" Background="{DynamicResource AppBorderBrush}" Opacity="0.6"/>
 
           <!-- Caption -->
           <StackPanel Spacing="6">
-            <TextBlock Text="CAPTION" Foreground="#555555" FontSize="11"
-                       FontWeight="SemiBold" LetterSpacing="0.8"/>
+            <TextBlock Text="CAPTION" Foreground="{DynamicResource AppSubtextBrush}" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="1.2"/>
             <TextBox Text="{Binding Caption}"
                      PlaceholderText="What's on your mind? Use #hashtags to tag topics."
                      AcceptsReturn="True" MinHeight="100" MaxHeight="220"
                      TextWrapping="Wrap" Classes="postInput"/>
           </StackPanel>
 
-          <!-- Image area -->
+          <!-- Image / Video area -->
           <StackPanel Spacing="8">
-            <TextBlock Text="PHOTO" Foreground="#555555" FontSize="11"
-                       FontWeight="SemiBold" LetterSpacing="0.8"/>
-            <!-- Preview -->
+            <TextBlock Text="PHOTO OR VIDEO" Foreground="{DynamicResource AppSubtextBrush}" FontSize="11"
+                       FontWeight="SemiBold" LetterSpacing="1.2"/>
+
+            <!-- Image preview -->
             <Border CornerRadius="12" ClipToBounds="True" IsVisible="{Binding HasImage}"
                     MaxHeight="340" BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1">
@@ -43,17 +44,56 @@
               </Grid>
             </Border>
 
-            <!-- Pick button -->
-            <Button Click="OnPickImage" IsVisible="{Binding !HasImage}"
-                    Classes="imagePickBtn">
-              <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                <TextBlock Text="🖼" FontSize="18"/>
-                <StackPanel VerticalAlignment="Center" Spacing="1">
-                  <TextBlock Text="Add a photo" FontSize="14" FontWeight="Medium"/>
-                  <TextBlock Text="PNG, JPG, GIF, WebP up to 10 MB" FontSize="11" Foreground="#555555"/>
+            <!-- Video chosen indicator -->
+            <Border CornerRadius="12" IsVisible="{Binding HasVideo}"
+                    Background="{DynamicResource AppInputBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                    Padding="16,14">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <Viewbox Grid.Column="0" Width="28" Height="28">
+                  <Canvas Width="24" Height="24">
+                    <Path Fill="{DynamicResource AppAccentBrush}"
+                          Data="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                  </Canvas>
+                </Viewbox>
+                <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="Video selected" Foreground="{DynamicResource AppTextBrush}"
+                             FontWeight="SemiBold" FontSize="13"/>
+                  <TextBlock Text="{Binding VideoPath}" Foreground="#555555"
+                             FontSize="11" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
-              </StackPanel>
-            </Button>
+                <Button Grid.Column="2" Click="OnRemoveVideo" Classes="removeBtn" Content="✕ Remove"/>
+              </Grid>
+            </Border>
+
+            <!-- Pick buttons (shown when neither image nor video is selected) -->
+            <Grid ColumnDefinitions="*,8,*"
+                  IsVisible="{Binding CanPickMedia}">
+              <Button Grid.Column="0" Click="OnPickImage" Classes="imagePickBtn">
+                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                  <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                      <Path Fill="#555555"
+                            Data="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                    </Canvas>
+                  </Viewbox>
+                  <TextBlock Text="Add Photo" FontSize="13" FontWeight="Medium" HorizontalAlignment="Center"/>
+                  <TextBlock Text="PNG, JPG, WebP" FontSize="10" Foreground="#555555" HorizontalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button Grid.Column="2" Click="OnPickVideo" Classes="imagePickBtn">
+                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                  <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                      <Path Fill="#555555"
+                            Data="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                    </Canvas>
+                  </Viewbox>
+                  <TextBlock Text="Add Video" FontSize="13" FontWeight="Medium" HorizontalAlignment="Center"/>
+                  <TextBlock Text="MP4, WebM, MOV" FontSize="10" Foreground="#555555" HorizontalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+            </Grid>
           </StackPanel>
 
           <!-- Suggested tags (from typed #hashtags) -->

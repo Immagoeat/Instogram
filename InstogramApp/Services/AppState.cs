@@ -38,6 +38,24 @@ public class AppState
     public int    SpeakerDeviceIndex { get; set; } = -1;
     public string CameraDevicePath   { get; set; } = "";  // "" = first available
 
+    // FFmpeg lib path — detected once at first use
+    private static string? _ffmpegLibPath;
+    public static string FfmpegLibPath => _ffmpegLibPath ??= DetectFfmpegPath();
+    private static string DetectFfmpegPath()
+    {
+        foreach (var path in new[] {
+            "/usr/lib/x86_64-linux-gnu",
+            "/usr/lib/aarch64-linux-gnu",
+            "/usr/local/lib",
+            "/usr/lib" })
+        {
+            if (System.IO.File.Exists(System.IO.Path.Combine(path, "libavcodec.so.60")) ||
+                System.IO.File.Exists(System.IO.Path.Combine(path, "libavcodec.so.58")))
+                return path;
+        }
+        return "/usr/lib/x86_64-linux-gnu"; // fallback
+    }
+
     // Server mode — when true, use ServerClient instead of local services
     public bool   IsServerMode     { get; set; }
     public string ServerUserId     { get; set; } = "";

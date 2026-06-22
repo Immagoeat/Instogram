@@ -16,6 +16,7 @@
   <SolidColorBrush x:Key="AppBorderBrush"  Color="{StaticResource AppBorder}"/>
   <SolidColorBrush x:Key="AppTextBrush"    Color="{StaticResource AppText}"/>
   <SolidColorBrush x:Key="AppSubtextBrush" Color="{StaticResource AppSubtext}"/>
+  <SolidColorBrush x:Key="NavIconBrush"    Color="#c4895a"/>
   <SolidColorBrush x:Key="AppAccentBrush"  Color="{StaticResource AppAccent}"/>
   <SolidColorBrush x:Key="AppAccentDimBrush" Color="{StaticResource AppAccentDim}"/>
   <SolidColorBrush x:Key="AppInputBrush"   Color="{StaticResource AppInput}"/>

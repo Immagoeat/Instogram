@@ -68,6 +68,35 @@ public partial class StoryComposeView : UserControl
 
     void OnClearBgImage(object? s, RoutedEventArgs e) => VM.BgImagePath = "";
 
+    async void OnPickVideo(object? s, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(
+            new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Choose background video",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new Avalonia.Platform.Storage.FilePickerFileType("Videos")
+                    {
+                        Patterns  = ["*.mp4", "*.webm", "*.mov", "*.avi", "*.mkv"],
+                        MimeTypes = ["video/*"]
+                    }
+                ]
+            });
+
+        if (files.Count > 0)
+        {
+            VM.VideoPath   = files[0].Path.LocalPath;
+            VM.BgImagePath = ""; // clear image if video chosen
+        }
+    }
+
+    void OnClearVideo(object? s, RoutedEventArgs e) => VM.VideoPath = "";
+
     // ── Draggable text overlay ────────────────────────────────────────────────
 
     private bool   _dragging;

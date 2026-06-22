@@ -4,42 +4,71 @@
 
   <Grid RowDefinitions="Auto,*">
 
-    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="24,14"
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="28,18"
             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
       <StackPanel Spacing="2">
-        <TextBlock Text="Notifications" Foreground="{DynamicResource AppTextBrush}" FontSize="20" FontWeight="Bold"/>
-        <TextBlock Text="Messages, posts, and activity" Foreground="#444444" FontSize="12"/>
+        <TextBlock Text="Notifications" Foreground="{DynamicResource AppTextBrush}"
+                   FontSize="24" FontWeight="Bold" LetterSpacing="0.2"/>
+        <TextBlock Text="Activity, mentions, and updates"
+                   Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
       </StackPanel>
     </Border>
 
     <ScrollViewer Grid.Row="1">
       <StackPanel>
 
-        <TextBlock Text="You're all caught up ✓"
-                   Foreground="#3a3a3a" FontSize="15"
-                   HorizontalAlignment="Center" Margin="0,60"
-                   IsVisible="{Binding HasNotifications,
-                   Converter={x:Static BoolConverters.Not}}"/>
+        <!-- All caught up empty state -->
+        <StackPanel HorizontalAlignment="Center" Spacing="12" Margin="0,60"
+                    IsVisible="{Binding HasNotifications,
+                    Converter={x:Static BoolConverters.Not}}">
+          <Border Width="56" Height="56" CornerRadius="28" HorizontalAlignment="Center">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1e1040" Offset="0"/>
+                <GradientStop Color="#1a0f2e" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <Viewbox Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Canvas Width="24" Height="24">
+                <Path Fill="{DynamicResource AppSubtextBrush}"
+                      Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </Canvas>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="You're all caught up"
+                     Foreground="{DynamicResource AppSubtextBrush}" FontSize="15" FontWeight="SemiBold"
+                     HorizontalAlignment="Center"/>
+        </StackPanel>
 
         <ItemsControl ItemsSource="{Binding Items}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Padding="20,14" BorderBrush="#1a1a1a" BorderThickness="0,0,0,1">
-                <Grid ColumnDefinitions="44,*,Auto">
+              <Border Padding="20,14"
+                      BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1"
+                      Opacity="0.95">
+                <Grid ColumnDefinitions="46,*,Auto">
                   <!-- Icon circle -->
-                  <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19"
-                          Background="#1e1340" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Icon}" FontSize="17"
+                  <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                          VerticalAlignment="Center">
+                    <Border.Background>
+                      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#1e1040" Offset="0"/>
+                        <GradientStop Color="#2d0a20" Offset="1"/>
+                      </LinearGradientBrush>
+                    </Border.Background>
+                    <TextBlock Text="{Binding Icon}" FontSize="18"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                   </Border>
                   <!-- Body -->
                   <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" Spacing="3">
-                    <TextBlock Text="{Binding Body}" Foreground="#e0e0e0"
+                    <TextBlock Text="{Binding Body}" Foreground="{DynamicResource AppTextBrush}"
                                FontSize="13" TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding Time}" Foreground="#555555" FontSize="11"/>
+                    <TextBlock Text="{Binding Time}"
+                               Foreground="{DynamicResource AppSubtextBrush}" FontSize="11"/>
                   </StackPanel>
                   <!-- Unread dot -->
-                  <Ellipse Grid.Column="2" Width="8" Height="8" Fill="#8b5cf6"
+                  <Ellipse Grid.Column="2" Width="8" Height="8"
+                           Fill="{DynamicResource AppAccentBrush}"
                            VerticalAlignment="Center" Margin="12,0,0,0"
                            IsVisible="{Binding IsNew}"/>
                 </Grid>

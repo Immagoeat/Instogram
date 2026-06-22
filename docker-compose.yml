@@ -13,6 +13,7 @@ services:
       - Jwt__Issuer=InstogramServer
       - Jwt__Audience=InstogramApp
       - AvatarDir=/data/avatars
+      - ImageDir=/data/images
 
 volumes:
   instogram_data:

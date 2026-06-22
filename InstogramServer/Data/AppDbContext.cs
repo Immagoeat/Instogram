@@ -17,6 +17,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ConversationMember> ConvMembers   => Set<ConversationMember>();
     public DbSet<Message>            Messages      => Set<Message>();
     public DbSet<Notification>       Notifications => Set<Notification>();
+    public DbSet<BannedWord>         BannedWords   => Set<BannedWord>();
+    public DbSet<AutomodFlag>        AutomodFlags  => Set<AutomodFlag>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {

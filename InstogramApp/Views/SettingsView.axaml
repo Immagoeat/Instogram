@@ -6,8 +6,12 @@
   <ScrollViewer>
     <StackPanel MaxWidth="580" HorizontalAlignment="Center" Margin="40,36" Spacing="0">
 
-      <TextBlock Text="Settings" Foreground="{DynamicResource AppTextBrush}"
-                 FontSize="26" FontWeight="Bold" Margin="0,0,0,32"/>
+      <StackPanel Spacing="4" Margin="0,0,0,32">
+        <TextBlock Text="Settings" Foreground="{DynamicResource AppTextBrush}"
+                   FontSize="26" FontWeight="Bold"/>
+        <TextBlock Text="Personalize your Instogram experience"
+                   Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
+      </StackPanel>
 
       <!-- Audio -->
       <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14"
@@ -15,11 +19,19 @@
               Padding="24,20" Margin="0,0,0,16">
         <StackPanel Spacing="20">
 
-          <TextBlock Text="Audio" Foreground="{DynamicResource AppTextBrush}"
-                     FontSize="16" FontWeight="SemiBold"/>
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Viewbox Width="18" Height="18">
+              <Canvas Width="24" Height="24">
+                <Path Fill="{DynamicResource AppAccentBrush}"
+                      Data="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </Canvas>
+            </Viewbox>
+            <TextBlock Text="Audio" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
 
           <StackPanel Spacing="8">
-            <TextBlock Text="Microphone" Foreground="#888888" FontSize="13"/>
+            <TextBlock Text="Microphone" Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
             <ComboBox ItemsSource="{Binding MicDevices}"
                       SelectedItem="{Binding SelectedMic}"
                       HorizontalAlignment="Stretch"
@@ -36,7 +48,7 @@
           </StackPanel>
 
           <StackPanel Spacing="8">
-            <TextBlock Text="Speaker / Headphones" Foreground="#888888" FontSize="13"/>
+            <TextBlock Text="Speaker / Headphones" Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
             <ComboBox ItemsSource="{Binding SpeakerDevices}"
                       SelectedItem="{Binding SelectedSpeaker}"
                       HorizontalAlignment="Stretch"
@@ -61,11 +73,19 @@
               Padding="24,20" Margin="0,0,0,24">
         <StackPanel Spacing="20">
 
-          <TextBlock Text="Camera" Foreground="{DynamicResource AppTextBrush}"
-                     FontSize="16" FontWeight="SemiBold"/>
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Viewbox Width="18" Height="18">
+              <Canvas Width="24" Height="24">
+                <Path Fill="{DynamicResource AppAccentBrush}"
+                      Data="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+              </Canvas>
+            </Viewbox>
+            <TextBlock Text="Camera" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
 
           <StackPanel Spacing="8">
-            <TextBlock Text="Camera device" Foreground="#888888" FontSize="13"/>
+            <TextBlock Text="Camera device" Foreground="{DynamicResource AppSubtextBrush}" FontSize="13"/>
             <ComboBox ItemsSource="{Binding CameraDevices}"
                       SelectedItem="{Binding SelectedCamera}"
                       HorizontalAlignment="Stretch"
@@ -85,16 +105,127 @@
       </Border>
 
       <!-- Save -->
-      <StackPanel Orientation="Horizontal" Spacing="12">
-        <Button Click="OnSave" Content="Save Settings"
-                Background="#7c3aed" Foreground="White"
-                Padding="22,10" CornerRadius="10" FontSize="14" FontWeight="SemiBold"
-                Cursor="Hand" BorderThickness="0"/>
-        <TextBlock Text="{Binding StatusText}" Foreground="#a78bfa"
+      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,32">
+        <Button Click="OnSave"
+                Background="{DynamicResource AppAccentBrush}" Foreground="White"
+                Padding="22,11" CornerRadius="12" FontSize="14" FontWeight="SemiBold"
+                Cursor="Hand" BorderThickness="0">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Viewbox Width="14" Height="14">
+              <Canvas Width="24" Height="24">
+                <Path Fill="White"
+                      Data="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+              </Canvas>
+            </Viewbox>
+            <TextBlock Text="Save Settings" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AppAccentBrush}"
                    FontSize="14" VerticalAlignment="Center"/>
       </StackPanel>
 
+      <!-- ── Danger Zone ─────────────────────────────────────────────────── -->
+      <Border Background="#0f0404" CornerRadius="14"
+              BorderBrush="#3d1515" BorderThickness="1"
+              Padding="24,20">
+        <StackPanel Spacing="16">
+
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Viewbox Width="18" Height="18">
+              <Canvas Width="24" Height="24">
+                <Path Fill="#f87171"
+                      Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </Canvas>
+            </Viewbox>
+            <TextBlock Text="Danger Zone" Foreground="#f87171"
+                       FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <StackPanel Spacing="6">
+            <TextBlock Text="Delete Account" Foreground="#fca5a5"
+                       FontSize="14" FontWeight="SemiBold"/>
+            <TextBlock Text="Permanently remove your account and all your data. This cannot be undone."
+                       Foreground="#9a6060" FontSize="12" TextWrapping="Wrap"/>
+          </StackPanel>
+
+          <!-- Confirm prompt -->
+          <Border IsVisible="{Binding ShowDeleteConfirm}"
+                  Background="#180808" CornerRadius="10" Padding="16,14"
+                  BorderBrush="#5a1515" BorderThickness="1">
+            <StackPanel Spacing="12">
+              <TextBlock Text="Are you absolutely sure? This will delete your account, posts, and all data forever."
+                         Foreground="#fca5a5" FontSize="13" TextWrapping="Wrap" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding DeleteError}" Foreground="#f87171" FontSize="12"
+                         IsVisible="{Binding DeleteError,
+                         Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Click="OnConfirmDelete" Classes="dangerBtn" Content="Yes, delete my account"/>
+                <Button Click="OnCancelDelete" Classes="cancelBtn" Content="Cancel"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <Button Click="OnPromptDelete" Classes="dangerOutlineBtn"
+                  IsVisible="{Binding ShowDeleteConfirm,
+                  Converter={x:Static BoolConverters.Not}}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Viewbox Width="14" Height="14">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="#f87171"
+                        Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </Canvas>
+              </Viewbox>
+              <TextBlock Text="Delete my account" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+        </StackPanel>
+      </Border>
+
     </StackPanel>
   </ScrollViewer>
+
+  <UserControl.Styles>
+    <Style Selector="Button.dangerOutlineBtn">
+      <Setter Property="Background" Value="#01000000"/>
+      <Setter Property="Foreground" Value="#f87171"/>
+      <Setter Property="BorderBrush" Value="#5a1515"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Padding" Value="16,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.dangerOutlineBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#2a0808"/>
+    </Style>
+    <Style Selector="Button.dangerBtn">
+      <Setter Property="Background" Value="#7f1d1d"/>
+      <Setter Property="Foreground" Value="#fecaca"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="16,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.dangerBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#991b1b"/>
+    </Style>
+    <Style Selector="Button.cancelBtn">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="16,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.cancelBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+    </Style>
+  </UserControl.Styles>
 
 </UserControl>

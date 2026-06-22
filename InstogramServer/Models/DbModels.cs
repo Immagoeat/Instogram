@@ -19,6 +19,8 @@ public class User
     public bool   NotifyFollowedPosts { get; set; } = true;
     public bool   IsVerified    { get; set; } = false;
     public bool   IsMaster      { get; set; } = false;
+    public bool   IsBanned      { get; set; } = false;
+    public string BanReason     { get; set; } = "";
     public DateTime CreatedAt   { get; set; } = DateTime.UtcNow;
 
     public ICollection<Follow>          Followers        { get; set; } = new List<Follow>();
@@ -59,6 +61,7 @@ public class Post
     public string Caption   { get; set; } = "";
     public string Tags      { get; set; } = ""; // comma-separated
     public string ImageUrl  { get; set; } = "";
+    public string VideoUrl  { get; set; } = "";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<PostLike>    Likes    { get; set; } = new List<PostLike>();
     public ICollection<Comment>     Comments { get; set; } = new List<Comment>();
@@ -91,6 +94,7 @@ public class Story
     public string Text            { get; set; } = "";
     public string BackgroundColor { get; set; } = "#1a0a3a";
     public string ImageUrl        { get; set; } = "";
+    public string VideoUrl        { get; set; } = "";
     // Fractional position (0‒1) and scale of the text overlay
     public double TextX           { get; set; } = 0.5;
     public double TextY           { get; set; } = 0.5;
@@ -155,4 +159,31 @@ public class Notification
     public Guid?    RelatedPostId { get; set; }
     public bool     IsRead       { get; set; }
     public DateTime CreatedAt    { get; set; } = DateTime.UtcNow;
+}
+
+// ── Automod ───────────────────────────────────────────────────────────────────
+
+public class BannedWord
+{
+    public Guid   Id        { get; set; } = Guid.NewGuid();
+    public string Word      { get; set; } = "";     // lowercased, trimmed
+    public string AddedBy   { get; set; } = "";     // username of master who added it
+    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+}
+
+public enum AutomodContentType { Post, Comment, Story, Bio, Username }
+
+public class AutomodFlag
+{
+    public Guid     Id          { get; set; } = Guid.NewGuid();
+    public Guid     AuthorId    { get; set; }
+    public string   AuthorName  { get; set; } = "";
+    public AutomodContentType ContentType { get; set; }
+    public Guid?    ContentId   { get; set; }     // PostId, StoryId, etc.
+    public string   Snippet     { get; set; } = ""; // offending text excerpt
+    public string   MatchedWord { get; set; } = "";
+    public bool     IsResolved  { get; set; } = false;
+    public string   ResolvedBy  { get; set; } = "";
+    public string   Resolution  { get; set; } = ""; // "dismissed" | "deleted"
+    public DateTime CreatedAt   { get; set; } = DateTime.UtcNow;
 }

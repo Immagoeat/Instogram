@@ -6,25 +6,43 @@
   <Grid RowDefinitions="Auto,*,Auto">
 
     <!-- Header -->
-    <Border Grid.Row="0" Background="#111111" Padding="16,12"
+    <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" Padding="16,12"
             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-          <Button Click="OnBack" Classes="ghostBtn" Content="←" FontSize="18"/>
-          <Border Width="38" Height="38" CornerRadius="19" Background="#8b5cf6">
-            <TextBlock Text="{Binding AvatarLetter}" Foreground="{DynamicResource AppTextBrush}" FontWeight="Bold"
+          <Button Click="OnBack" Classes="ghostBtn">
+            <Viewbox Width="18" Height="18">
+              <Canvas Width="24" Height="24">
+                <Path Fill="{DynamicResource AppSubtextBrush}"
+                      Data="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+              </Canvas>
+            </Viewbox>
+          </Button>
+          <Border Width="40" Height="40" CornerRadius="20"
+                  Background="{DynamicResource AppAccentBrush}">
+            <TextBlock Text="{Binding AvatarLetter}" Foreground="White" FontWeight="Bold"
                        FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <Button Click="OnViewProfile" Classes="ghostBtn" Padding="0">
-            <StackPanel Spacing="1">
+            <StackPanel Spacing="2">
               <TextBlock Text="{Binding Partner.DisplayName}" Foreground="{DynamicResource AppTextBrush}"
                          FontWeight="SemiBold" FontSize="14"/>
               <TextBlock Text="{Binding Partner.Username, StringFormat='@{0}'}"
-                         Foreground="#777777" FontSize="12"/>
+                         Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
             </StackPanel>
           </Button>
         </StackPanel>
-        <Button Grid.Column="1" Click="OnCall" Classes="callHeaderBtn" Content="Call"/>
+        <Button Grid.Column="1" Click="OnCall" Classes="callHeaderBtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Viewbox Width="14" Height="14">
+              <Canvas Width="24" Height="24">
+                <Path Fill="White"
+                      Data="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+              </Canvas>
+            </Viewbox>
+            <TextBlock Text="Call" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
       </Grid>
     </Border>
 
@@ -63,14 +81,19 @@
     </ScrollViewer>
 
     <!-- Compose bar -->
-    <Border Grid.Row="2" Background="#111111" Padding="16,10"
+    <Border Grid.Row="2" Background="{DynamicResource AppSurfaceBrush}" Padding="16,10"
             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0">
       <Grid ColumnDefinitions="*,Auto">
         <TextBox Grid.Column="0" Text="{Binding NewMessage}"
                  PlaceholderText="Message…"
                  Classes="composeInput"/>
-        <Button Grid.Column="1" Click="OnSend" Classes="sendBtn"
-                Content="Send" Margin="10,0,0,0"/>
+        <Button Grid.Column="1" Click="OnSend" Classes="sendBtn" Margin="10,0,0,0">
+          <Viewbox Width="16" Height="16">
+            <Canvas Width="24" Height="24">
+              <Path Fill="White" Data="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </Canvas>
+          </Viewbox>
+        </Button>
       </Grid>
     </Border>
 
@@ -80,40 +103,42 @@
     <Style Selector="Button.ghostBtn">
       <Setter Property="Background" Value="#01000000"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Foreground" Value="#aaaaaa"/>
-      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="Padding" Value="8,8"/>
+      <Setter Property="CornerRadius" Value="10"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
+    <Style Selector="Button.ghostBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+    </Style>
     <Style Selector="TextBox.composeInput">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
-      <Setter Property="Padding" Value="14,10"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="16,11"/>
       <Setter Property="CornerRadius" Value="22"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
     <Style Selector="TextBox.composeInput /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.composeInput:pointerover /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.composeInput:focus /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.composeInput:focus-within /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.composeInput /template/ TextBlock#PART_Watermark">
-      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
       <Setter Property="Opacity" Value="1"/>
     </Style>
     <Style Selector="Button.callHeaderBtn">
@@ -121,18 +146,25 @@
       <Setter Property="Foreground" Value="White"/>
       <Setter Property="FontSize" Value="13"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Padding" Value="16,8"/>
-      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="14,9"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
+    <Style Selector="Button.callHeaderBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#14532d"/>
+    </Style>
     <Style Selector="Button.sendBtn">
-      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
       <Setter Property="Foreground" Value="White"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Padding" Value="18,10"/>
+      <Setter Property="Padding" Value="14,11"/>
       <Setter Property="CornerRadius" Value="22"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.sendBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppAccentDimBrush}"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

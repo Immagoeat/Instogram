@@ -13,18 +13,27 @@
 
         <!-- Header -->
         <Grid ColumnDefinitions="Auto,*">
-          <Button Grid.Column="0" Click="OnBack" Classes="ghostBtn"
-                  Content="← Back" VerticalAlignment="Center"/>
-          <TextBlock Grid.Column="1" Text="Edit Profile" Foreground="{DynamicResource AppTextBrush}"
-                     FontSize="22" FontWeight="Bold" Margin="16,0,0,0"
-                     VerticalAlignment="Center"/>
+          <Button Grid.Column="0" Click="OnBack" Classes="ghostBtn" Padding="8,8">
+            <Viewbox Width="18" Height="18">
+              <Canvas Width="24" Height="24">
+                <Path Fill="{DynamicResource AppSubtextBrush}"
+                      Data="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+              </Canvas>
+            </Viewbox>
+          </Button>
+          <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
+            <TextBlock Text="Edit Profile" Foreground="{DynamicResource AppTextBrush}"
+                       FontSize="22" FontWeight="Bold"/>
+            <TextBlock Text="Customize how others see you"
+                       Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
+          </StackPanel>
         </Grid>
 
         <!-- ── Avatar ──────────────────────────────────────────────────── -->
         <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
                 BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
           <StackPanel Spacing="14">
-            <TextBlock Text="PROFILE PICTURE" Foreground="#666666"
+            <TextBlock Text="PROFILE PICTURE" Foreground="{DynamicResource AppSubtextBrush}"
                        FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
 
             <Grid ColumnDefinitions="Auto,*">
@@ -58,8 +67,8 @@
                         Content="Remove photo" HorizontalAlignment="Left"
                         IsVisible="{Binding HasAvatar}"
                         Foreground="#ff6b6b" FontSize="13"/>
-                <TextBlock Text="PNG, JPG, GIF, WEBP supported"
-                           Foreground="#444444" FontSize="11"/>
+                <TextBlock Text="PNG, JPG, GIF, WEBP · max 5 MB"
+                           Foreground="{DynamicResource AppSubtextBrush}" FontSize="11"/>
               </StackPanel>
             </Grid>
           </StackPanel>
@@ -69,7 +78,7 @@
         <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
                 BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
           <StackPanel Spacing="14">
-            <TextBlock Text="PROFILE INFO" Foreground="#666666"
+            <TextBlock Text="PROFILE INFO" Foreground="{DynamicResource AppSubtextBrush}"
                        FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
 
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
@@ -103,17 +112,18 @@
         <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
                 BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
           <StackPanel Spacing="14">
-            <TextBlock Text="ACCENT COLOUR" Foreground="#666666"
+            <TextBlock Text="ACCENT COLOUR" Foreground="{DynamicResource AppSubtextBrush}"
                        FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
             <TextBlock Text="Used for your avatar background and highlights when no photo is set"
-                       Foreground="#444444" FontSize="12" TextWrapping="Wrap"/>
+                       Foreground="{DynamicResource AppSubtextBrush}" FontSize="12" TextWrapping="Wrap"/>
 
             <!-- Selected colour preview strip -->
             <Grid ColumnDefinitions="Auto,*">
               <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
                       Background="{Binding SelectedColor}" Margin="0,0,12,0"/>
               <TextBlock Grid.Column="1" Text="{Binding SelectedColor}"
-                         Foreground="#888888" FontSize="13" FontFamily="Consolas,Monospace"
+                         Foreground="{DynamicResource AppSubtextBrush}"
+                         FontSize="13" FontFamily="Consolas,Monospace"
                          VerticalAlignment="Center"/>
             </Grid>
 
@@ -145,7 +155,7 @@
                        Width="110" Classes="field"
                        FontFamily="Consolas,Monospace"/>
               <TextBlock Text="or type any hex color"
-                         Foreground="#555555" FontSize="12"
+                         Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"
                          VerticalAlignment="Center"/>
             </StackPanel>
           </StackPanel>
@@ -155,14 +165,14 @@
         <Border Background="{DynamicResource AppCardBrush}" CornerRadius="14" Padding="24"
                 BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1">
           <StackPanel Spacing="14">
-            <TextBlock Text="NOTIFICATIONS" Foreground="#666666"
+            <TextBlock Text="NOTIFICATIONS" Foreground="{DynamicResource AppSubtextBrush}"
                        FontSize="11" FontWeight="SemiBold" LetterSpacing="1"/>
 
             <Grid ColumnDefinitions="*,Auto">
               <StackPanel Grid.Column="0" Spacing="2">
                 <TextBlock Text="Direct messages" Foreground="{DynamicResource AppTextBrush}" FontSize="14"/>
                 <TextBlock Text="Get notified when someone messages you"
-                           Foreground="#555555" FontSize="12"/>
+                           Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
               </StackPanel>
               <CheckBox Grid.Column="1" IsChecked="{Binding NotifyDMs}"
                         VerticalAlignment="Center"/>
@@ -174,7 +184,7 @@
               <StackPanel Grid.Column="0" Spacing="2">
                 <TextBlock Text="Posts from people you follow" Foreground="{DynamicResource AppTextBrush}" FontSize="14"/>
                 <TextBlock Text="Get notified when someone you follow posts"
-                           Foreground="#555555" FontSize="12"/>
+                           Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
               </StackPanel>
               <CheckBox Grid.Column="1" IsChecked="{Binding NotifyFollowedPosts}"
                         VerticalAlignment="Center"/>
@@ -183,18 +193,41 @@
         </Border>
 
         <!-- Feedback -->
-        <TextBlock Text="{Binding Status}" Foreground="#a78bfa" FontSize="14"
+        <TextBlock Text="{Binding Status}" Foreground="{DynamicResource AppAccentBrush}"
+                   FontSize="14"
                    IsVisible="{Binding Status,
                    Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff8080" FontSize="14"
                    IsVisible="{Binding ErrorMessage,
                    Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-        <Button Click="OnGoThemes" Content="🎨  Choose Theme" Classes="ghostBtn"
-                HorizontalAlignment="Left" FontSize="14" Foreground="#8b5cf6"/>
-
-        <Button Click="OnSave" Content="Save Changes" Classes="primaryBtn"
-                HorizontalAlignment="Stretch"/>
+        <!-- Theme + Save row -->
+        <Grid ColumnDefinitions="Auto,*">
+          <Button Grid.Column="0" Click="OnGoThemes" Classes="themeBtn"
+                  Margin="0,0,12,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Viewbox Width="16" Height="16">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="{DynamicResource AppAccentBrush}"
+                        Data="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                </Canvas>
+              </Viewbox>
+              <TextBlock Text="Theme" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Grid.Column="1" Click="OnSave" Classes="primaryBtn"
+                  HorizontalAlignment="Stretch">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+              <Viewbox Width="14" Height="14">
+                <Canvas Width="24" Height="24">
+                  <Path Fill="White"
+                        Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </Canvas>
+              </Viewbox>
+              <TextBlock Text="Save Changes" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </Grid>
 
       </StackPanel>
     </Grid>
@@ -202,61 +235,81 @@
 
   <UserControl.Styles>
     <Style Selector="TextBlock.label">
-      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
       <Setter Property="FontSize" Value="13"/>
       <Setter Property="VerticalAlignment" Value="Top"/>
       <Setter Property="Margin" Value="0,10,16,0"/>
       <Setter Property="Width" Value="70"/>
     </Style>
     <Style Selector="TextBox.field">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
-      <Setter Property="Padding" Value="12,8"/>
-      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="12,9"/>
+      <Setter Property="CornerRadius" Value="10"/>
       <Setter Property="FontSize" Value="14"/>
     </Style>
     <Style Selector="TextBox.field /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.field:pointerover /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.field:focus /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.field:focus-within /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="#1a1a1a"/>
-      <Setter Property="BorderBrush" Value="#2a2a2a"/>
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
       <Setter Property="BoxShadow" Value="none"/>
     </Style>
     <Style Selector="TextBox.field /template/ TextBlock#PART_Watermark">
-      <Setter Property="Foreground" Value="#666666"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
       <Setter Property="Opacity" Value="1"/>
     </Style>
     <Style Selector="Button.primaryBtn">
-      <Setter Property="Background" Value="#8b5cf6"/>
+      <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
       <Setter Property="Foreground" Value="White"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="FontSize" Value="14"/>
       <Setter Property="Padding" Value="14,12"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.primaryBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppAccentDimBrush}"/>
     </Style>
     <Style Selector="Button.ghostBtn">
       <Setter Property="Background" Value="#01000000"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Foreground" Value="#888888"/>
-      <Setter Property="Padding" Value="0,6"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppSubtextBrush}"/>
+      <Setter Property="Padding" Value="8,8"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="CornerRadius" Value="10"/>
       <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Button.ghostBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+    </Style>
+    <Style Selector="Button.themeBtn">
+      <Setter Property="Background" Value="{DynamicResource AppInputBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AppAccentBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.themeBtn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
     </Style>
   </UserControl.Styles>
 </UserControl>

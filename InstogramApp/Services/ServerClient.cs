@@ -18,7 +18,7 @@ public record UserDto(
 
 public record PostDto(
     Guid Id, Guid AuthorId, string AuthorUsername, string AuthorDisplayName,
-    string AuthorAccent, string Caption, string Tags, string ImageUrl, DateTime CreatedAt,
+    string AuthorAccent, string Caption, string Tags, string ImageUrl, string VideoUrl, DateTime CreatedAt,
     int LikeCount, bool IsLiked, IEnumerable<CommentDto> Comments);
 
 public record CommentDto(
@@ -26,7 +26,7 @@ public record CommentDto(
 
 public record StoryDto(
     Guid Id, Guid AuthorId, string AuthorUsername, string AuthorDisplayName,
-    string AuthorAccent, string Text, string BackgroundColor, string ImageUrl,
+    string AuthorAccent, string Text, string BackgroundColor, string ImageUrl, string VideoUrl,
     double TextX, double TextY, double TextScale, double TextRotation, string TaggedUsers,
     DateTime CreatedAt, DateTime ExpiresAt, bool HasSeen);
 
@@ -60,6 +60,17 @@ public record FriendDto(
 
 public record UserProfileDto(UserDto User, int FollowerCount, int FollowingCount, bool IsFollowing,
     bool HasPendingRequest = false, bool IsFriend = false);
+
+public record BannedWordDto(Guid Id, string Word, string AddedBy, DateTime AddedAt);
+
+public record AutomodFlagDto(
+    Guid Id, Guid AuthorId, string AuthorName, string ContentType,
+    Guid? ContentId, string Snippet, string MatchedWord,
+    bool IsResolved, string ResolvedBy, string Resolution, DateTime CreatedAt);
+
+public record AdminUserDto(
+    Guid Id, string Username, string DisplayName,
+    bool IsVerified, bool IsMaster, bool IsBanned, string BanReason, DateTime CreatedAt);
 
 // ── ServerClient ──────────────────────────────────────────────────────────────
 
@@ -295,6 +306,17 @@ public class ServerClient
         return body?.ImageUrl;
     }
 
+    public async Task<string?> UploadPostVideoAsync(Guid postId, string filePath)
+    {
+        await using var fs = System.IO.File.OpenRead(filePath);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(fs), "file", System.IO.Path.GetFileName(filePath));
+        var resp = await _http.PostAsync($"posts/{postId}/video", content);
+        if (!resp.IsSuccessStatusCode) return null;
+        var body = await resp.Content.ReadFromJsonAsync<VideoUploadResponse>(JsonOpts);
+        return body?.VideoUrl;
+    }
+
     public Task<List<PostDto>?> GetFeedAsync(int page = 0) =>
         _http.GetFromJsonAsync<List<PostDto>>($"posts/feed?page={page}", JsonOpts);
 
@@ -344,6 +366,17 @@ public class ServerClient
         if (!resp.IsSuccessStatusCode) return null;
         var body = await resp.Content.ReadFromJsonAsync<ImageUploadResponse>(JsonOpts);
         return body?.ImageUrl;
+    }
+
+    public async Task<string?> UploadStoryVideoAsync(Guid storyId, string filePath)
+    {
+        await using var fs = System.IO.File.OpenRead(filePath);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(fs), "file", System.IO.Path.GetFileName(filePath));
+        var resp = await _http.PostAsync($"stories/{storyId}/video", content);
+        if (!resp.IsSuccessStatusCode) return null;
+        var body = await resp.Content.ReadFromJsonAsync<VideoUploadResponse>(JsonOpts);
+        return body?.VideoUrl;
     }
 
     public Task<List<StoryDto>?> GetStoryFeedAsync() =>
@@ -400,6 +433,69 @@ public class ServerClient
     public Task MarkAllNotificationsReadAsync() =>
         _http.PostAsync("notifications/read-all", null).ContinueWith(_ => { });
 
+    public async Task<bool> DeletePostAsync(Guid postId)
+    {
+        var resp = await _http.DeleteAsync($"posts/{postId}");
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> ReportPostAsync(Guid postId, string reason)
+    {
+        var resp = await _http.PostAsJsonAsync($"posts/{postId}/report", new { reason });
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> DeleteAccountAsync()
+    {
+        var resp = await _http.DeleteAsync("users/me");
+        return resp.IsSuccessStatusCode;
+    }
+
+    // ── Admin / automod ───────────────────────────────────────────────────────
+
+    public Task<List<BannedWordDto>?> GetBannedWordsAsync() =>
+        _http.GetFromJsonAsync<List<BannedWordDto>>("admin/words", JsonOpts);
+
+    public async Task<bool> AddBannedWordAsync(string word)
+    {
+        var resp = await _http.PostAsJsonAsync("admin/words", new { word });
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> DeleteBannedWordAsync(Guid id)
+    {
+        var resp = await _http.DeleteAsync($"admin/words/{id}");
+        return resp.IsSuccessStatusCode;
+    }
+
+    public Task<List<AutomodFlagDto>?> GetFlagsAsync(bool resolved = false) =>
+        _http.GetFromJsonAsync<List<AutomodFlagDto>>($"admin/flags?resolved={resolved}", JsonOpts);
+
+    public async Task<bool> ResolveFlagAsync(Guid flagId, string resolution)
+    {
+        var resp = await _http.PostAsJsonAsync($"admin/flags/{flagId}/resolve", new { resolution });
+        return resp.IsSuccessStatusCode;
+    }
+
+    public Task<List<AdminUserDto>?> GetAdminUsersAsync(string? q = null)
+    {
+        var url = "admin/users";
+        if (!string.IsNullOrEmpty(q)) url += $"?q={Uri.EscapeDataString(q)}";
+        return _http.GetFromJsonAsync<List<AdminUserDto>>(url, JsonOpts);
+    }
+
+    public async Task<bool> BanUserAsync(Guid userId, string reason)
+    {
+        var resp = await _http.PostAsJsonAsync($"admin/users/{userId}/ban", new { reason });
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> UnbanUserAsync(Guid userId)
+    {
+        var resp = await _http.PostAsync($"admin/users/{userId}/unban", null);
+        return resp.IsSuccessStatusCode;
+    }
+
     // ── Internal response types ───────────────────────────────────────────────
 
     private record AuthResponse(string Token, UserDto User);
@@ -407,6 +503,7 @@ public class ServerClient
     private record NotifCountResponse(int Count);
     private record AvatarResponse(string AvatarUrl);
     private record ImageUploadResponse(string ImageUrl);
+    private record VideoUploadResponse(string VideoUrl);
 
     // Hub payload shapes
     private record TypingPayload(Guid ConversationId, string Username);

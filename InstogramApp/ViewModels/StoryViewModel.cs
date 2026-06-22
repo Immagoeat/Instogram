@@ -160,10 +160,16 @@ public partial class StoryComposeViewModel : ViewModelBase
     [ObservableProperty] private string _errorMessage  = "";
     [ObservableProperty] private bool   _isBusy;
 
-    // ── Background image ───────────────────────────────────────────────────────
+    // ── Background image / video ───────────────────────────────────────────────
     [ObservableProperty] private string _bgImagePath = "";
     [ObservableProperty] private bool   _hasBgImage;
-    partial void OnBgImagePathChanged(string value) => HasBgImage = !string.IsNullOrEmpty(value);
+    partial void OnBgImagePathChanged(string value) { HasBgImage = !string.IsNullOrEmpty(value); OnPropertyChanged(nameof(CanPickMedia)); }
+
+    [ObservableProperty] private string _videoPath = "";
+    [ObservableProperty] private bool   _hasVideo;
+    partial void OnVideoPathChanged(string value) { HasVideo = !string.IsNullOrEmpty(value); OnPropertyChanged(nameof(CanPickMedia)); }
+
+    public bool CanPickMedia => !HasBgImage && !HasVideo;
 
     // ── Text overlay position/scale/rotation ──────────────────────────────────
     // Position is fractional (0‒1), translated to pixel offsets in the view
@@ -234,8 +240,8 @@ public partial class StoryComposeViewModel : ViewModelBase
     async Task Post()
     {
         var text = Text.Trim();
-        if (string.IsNullOrEmpty(text) && !HasBgImage)
-        { ErrorMessage = "Add some text or a background image first."; return; }
+        if (string.IsNullOrEmpty(text) && !HasBgImage && !HasVideo)
+        { ErrorMessage = "Add some text, a background image, or a video first."; return; }
 
         IsBusy = true;
         ErrorMessage = "";
@@ -251,6 +257,11 @@ public partial class StoryComposeViewModel : ViewModelBase
                 var imageUrl = await ServerClient.Instance.UploadStoryImageAsync(story.Id, BgImagePath);
                 if (imageUrl == null) ErrorMessage = "Story posted, but image upload failed.";
             }
+            else if (HasVideo)
+            {
+                var videoUrl = await ServerClient.Instance.UploadStoryVideoAsync(story.Id, VideoPath);
+                if (videoUrl == null) ErrorMessage = "Story posted, but video upload failed.";
+            }
 
             _main.Navigate(new FeedViewModel(_main));
         }
@@ -260,6 +271,7 @@ public partial class StoryComposeViewModel : ViewModelBase
 
     [RelayCommand] void SelectColor(string color) => SelectedColor = color;
     [RelayCommand] void Cancel() => _main.Navigate(new FeedViewModel(_main));
+    [RelayCommand] void ClearVideo() => VideoPath = "";
 }
 
 // ── Strip shown at the top of the feed ───────────────────────────────────────
@@ -340,6 +352,8 @@ public partial class ServerStoryViewerViewModel : ViewModelBase
     [ObservableProperty] private string _bgColor      = "#1a0a3a";
     [ObservableProperty] private string _imageUrl     = "";
     [ObservableProperty] private bool   _hasImage;
+    [ObservableProperty] private string _videoUrl     = "";
+    [ObservableProperty] private bool   _hasVideo;
     [ObservableProperty] private string _timeLabel    = "";
     [ObservableProperty] private int    _currentIndex = 1;
     [ObservableProperty] private int    _totalCount   = 1;
@@ -370,6 +384,11 @@ public partial class ServerStoryViewerViewModel : ViewModelBase
                        raw.StartsWith("http") ? raw :
                        ServerClient.Instance.BaseUrl.TrimEnd('/') + raw;
         HasImage     = !string.IsNullOrEmpty(raw);
+        var rawVid   = s.VideoUrl ?? "";
+        VideoUrl     = string.IsNullOrEmpty(rawVid) ? "" :
+                       rawVid.StartsWith("http") ? rawVid :
+                       ServerClient.Instance.BaseUrl.TrimEnd('/') + rawVid;
+        HasVideo     = !string.IsNullOrEmpty(rawVid);
         TextOffsetX  = s.TextX;
         TextOffsetY  = s.TextY;
         TextScale    = s.TextScale;

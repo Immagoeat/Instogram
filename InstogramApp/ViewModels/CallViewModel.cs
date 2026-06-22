@@ -299,7 +299,7 @@ public partial class CallViewModel : ViewModelBase
     {
         try
         {
-            FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_FATAL, "/usr/lib/x86_64-linux-gnu");
+            FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_FATAL, AppState.FfmpegLibPath);
 
             var cams = FFmpegCameraManager.GetCameraDevices();
             if (cams == null || cams.Count == 0) return;
