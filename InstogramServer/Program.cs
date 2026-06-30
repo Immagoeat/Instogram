@@ -1099,6 +1099,20 @@ admin.MapPost("/flags/{id:guid}/resolve", async (Guid id, ResolveFlagRequest req
     return Results.Ok();
 });
 
+// ── Claim master (only works when zero masters exist) ─────────────────────────
+
+admin.MapPost("/claim", async (HttpContext ctx, AppDbContext db) =>
+{
+    if (await db.Users.AnyAsync(u => u.IsMaster))
+        return Results.BadRequest("A master already exists. Ask them to promote you.");
+    var me = await db.Users.FindAsync(TokenService.UserIdFromContext(ctx));
+    if (me == null) return Results.Unauthorized();
+    me.IsMaster   = true;
+    me.IsVerified = true;
+    await db.SaveChangesAsync();
+    return Results.Ok(new { me.Id, me.Username, me.IsMaster });
+}).RequireAuthorization();
+
 // ── User management ───────────────────────────────────────────────────────────
 
 admin.MapGet("/users", async (HttpContext ctx, AppDbContext db, string? q = null) =>

@@ -524,6 +524,15 @@ public class ServerClient
         return resp.IsSuccessStatusCode;
     }
 
+    public async Task<string?> ClaimMasterAsync()
+    {
+        var resp = await _http.PostAsync("admin/claim", null);
+        if (resp.IsSuccessStatusCode) return null;
+        var body = await resp.Content.ReadAsStringAsync();
+        try { return System.Text.Json.JsonSerializer.Deserialize<string>(body, JsonOpts) ?? body; }
+        catch { return body; }
+    }
+
     public async Task<bool> PromoteUserAsync(Guid userId)
     {
         var resp = await _http.PostAsync($"admin/users/{userId}/promote", null);

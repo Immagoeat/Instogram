@@ -192,14 +192,44 @@ public partial class AdminViewModel : ViewModelBase
     [ObservableProperty] private bool   _reportsBusy;
     [ObservableProperty] private string _reportsStatus = "";
 
+    // ── Claim master (shown when server returns 403) ───────────────────────────
+    [ObservableProperty] private string _claimStatus = "";
+    [ObservableProperty] private bool   _showClaimButton;
+
     public AdminViewModel(MainWindowViewModel main)
     {
         _main = main;
-        _ = LoadFlagsAsync();
-        _ = LoadWordsAsync();
-        _ = LoadUsersAsync();
-        _ = LoadPostsAsync();
-        _ = LoadReportsAsync();
+        _ = LoadAllAsync();
+    }
+
+    private async Task LoadAllAsync()
+    {
+        await Task.WhenAll(
+            LoadFlagsAsync(), LoadWordsAsync(),
+            LoadUsersAsync(), LoadPostsAsync(), LoadReportsAsync());
+
+        // If everything failed with a permission error, show the claim button
+        bool allFailed = FlagsStatus.StartsWith("Error") && WordsStatus.StartsWith("Error")
+                      && UsersStatus.StartsWith("Error");
+        ShowClaimButton = allFailed;
+    }
+
+    [RelayCommand]
+    async Task ClaimMaster()
+    {
+        ClaimStatus = "Claiming master status…";
+        var error = await ServerClient.Instance.ClaimMasterAsync();
+        if (error == null)
+        {
+            AppState.Instance.ServerIsMaster = true;
+            ClaimStatus = "You are now master. Reloading…";
+            ShowClaimButton = false;
+            await LoadAllAsync();
+        }
+        else
+        {
+            ClaimStatus = $"Could not claim: {error}";
+        }
     }
 
     [RelayCommand] void Back() => _main.Navigate(new FeedViewModel(_main));
@@ -217,7 +247,7 @@ public partial class AdminViewModel : ViewModelBase
             Flags.Clear();
             if (list != null) foreach (var f in list) Flags.Add(new FlagRowViewModel(f, this));
         }
-        catch { FlagsStatus = "Failed to load flags."; }
+        catch (Exception ex) { FlagsStatus = $"Error: {ex.Message}"; }
         finally { FlagsBusy = false; }
     }
 
@@ -255,7 +285,7 @@ public partial class AdminViewModel : ViewModelBase
             Words.Clear();
             if (list != null) foreach (var w in list) Words.Add(new BannedWordRowViewModel(w, this));
         }
-        catch { WordsStatus = "Failed to load word list."; }
+        catch (Exception ex) { WordsStatus = $"Error: {ex.Message}"; }
         finally { WordsBusy = false; }
     }
 
@@ -299,7 +329,7 @@ public partial class AdminViewModel : ViewModelBase
             AdminUsers.Clear();
             if (list != null) foreach (var u in list) AdminUsers.Add(new AdminUserRowViewModel(u, this));
         }
-        catch { UsersStatus = "Failed to load users."; }
+        catch (Exception ex) { UsersStatus = $"Error: {ex.Message}"; }
         finally { UsersBusy = false; }
     }
 
@@ -348,7 +378,7 @@ public partial class AdminViewModel : ViewModelBase
             AdminPosts.Clear();
             if (list != null) foreach (var p in list) AdminPosts.Add(new AdminPostRowViewModel(p, this));
         }
-        catch { PostsStatus = "Failed to load posts."; }
+        catch (Exception ex) { PostsStatus = $"Error: {ex.Message}"; }
         finally { PostsBusy = false; }
     }
 
@@ -398,7 +428,7 @@ public partial class AdminViewModel : ViewModelBase
             Reports.Clear();
             if (list != null) foreach (var r in list) Reports.Add(new AdminReportRowViewModel(r));
         }
-        catch { ReportsStatus = "Failed to load reports."; }
+        catch (Exception ex) { ReportsStatus = $"Error: {ex.Message}"; }
         finally { ReportsBusy = false; }
     }
 

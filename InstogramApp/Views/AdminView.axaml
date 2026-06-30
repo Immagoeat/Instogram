@@ -3,7 +3,7 @@
              xmlns:vm="using:InstogramApp.ViewModels"
              x:Class="InstogramApp.Views.AdminView">
 
-  <Grid RowDefinitions="Auto,*">
+  <Grid RowDefinitions="Auto,Auto,*">
 
     <!-- ── Header ───────────────────────────────────────────────────────────── -->
     <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}"
@@ -35,8 +35,21 @@
       </Grid>
     </Border>
 
+    <!-- ── Claim master banner (shown only when no master exists) ──────────── -->
+    <Border Grid.Row="1" IsVisible="{Binding ShowClaimButton}"
+            Background="#1a1200" BorderBrush="#f59e0b" BorderThickness="0,0,0,1" Padding="20,10">
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <TextBlock Text="You don't have master access. If this server has no master yet, you can claim it."
+                   Foreground="#f59e0b" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+        <Button x:Name="claimMasterBtn" Click="OnClaimMaster" Content="Claim Master"
+                Background="#f59e0b" Foreground="Black" FontWeight="SemiBold"
+                Padding="14,6" CornerRadius="6"/>
+        <TextBlock Text="{Binding ClaimStatus}" Foreground="#f59e0b" FontSize="12" VerticalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
     <!-- ── TabControl ───────────────────────────────────────────────────────── -->
-    <TabControl Grid.Row="1" SelectedIndex="{Binding TabIndex}"
+    <TabControl Grid.Row="2" SelectedIndex="{Binding TabIndex}"
                 Background="{DynamicResource AppBgBrush}">
 
       <!-- ── Flagged content ─────────────────────────────────────────────── -->

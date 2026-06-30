@@ -10,6 +10,7 @@ public partial class AdminView : UserControl
     AdminViewModel VM => (AdminViewModel)DataContext!;
 
     void OnBack(object? s, RoutedEventArgs e)          => VM.BackCommand.Execute(null);
+    void OnClaimMaster(object? s, RoutedEventArgs e)   => VM.ClaimMasterCommand.Execute(null);
     void OnRefreshFlags(object? s, RoutedEventArgs e)  => VM.LoadFlagsCommand.Execute(null);
     void OnAddWord(object? s, RoutedEventArgs e)       => VM.AddWordCommand.Execute(null);
     void OnSearchUsers(object? s, RoutedEventArgs e)   => VM.SearchUsersCommand.Execute(null);
