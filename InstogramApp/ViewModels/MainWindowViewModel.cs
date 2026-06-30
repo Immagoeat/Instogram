@@ -31,7 +31,11 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentPage = new AuthViewModel(this);
     }
 
-    public void Navigate(ViewModelBase page) => CurrentPage = page;
+    public void Navigate(ViewModelBase page)
+    {
+        if (CurrentPage is IDisposable old) old.Dispose();
+        CurrentPage = page;
+    }
 
     public void OnServerLogin(string username, string displayName)
     {

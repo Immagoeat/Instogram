@@ -6,6 +6,7 @@ using InstogramServer.Hubs;
 using InstogramServer.Models;
 using InstogramServer.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -400,7 +401,8 @@ friends.MapGet("/list", async (HttpContext ctx, AppDbContext db) =>
 
 var posts = app.MapGroup("/posts").RequireAuthorization();
 
-posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
+posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db,
+    AutomodService automod, IHubContext<InstogramHub> hub) =>
 {
     var me = TokenService.UserIdFromContext(ctx);
     var post = new Post { AuthorId = me, Caption = req.Caption.Trim(), Tags = req.Tags };
@@ -437,7 +439,12 @@ posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db
         .Include(p => p.Likes)
         .Include(p => p.Comments).ThenInclude(c => c.Author)
         .FirstAsync(p => p.Id == post.Id);
-    return Results.Ok(PostDto(created, me));
+    var dto = PostDto(created, me);
+
+    // Broadcast to all connected clients so feeds update in real-time
+    await hub.Clients.All.SendAsync("NewPost", dto);
+
+    return Results.Ok(dto);
 });
 
 posts.MapGet("/feed", async (HttpContext ctx, AppDbContext db, int page = 0) =>

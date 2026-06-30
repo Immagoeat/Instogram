@@ -112,6 +112,7 @@ public class ServerClient
     public event Action<Guid>?              OnCallEnded;
     public event Action<Guid, string>?      OnConversationRenamed;
     public event Action<Guid, Guid, string>? OnMemberAdded;
+    public event Action<PostDto>?           OnNewPost;
 
     private ServerClient() { }
 
@@ -182,6 +183,11 @@ public class ServerClient
         {
             var o = Deserialize<MemberAddedPayload>(raw);
             if (o != null) OnMemberAdded?.Invoke(o.ConversationId, o.UserId, o.Username);
+        });
+        _hub.On<object>("NewPost", raw =>
+        {
+            var p = Deserialize<PostDto>(raw);
+            if (p != null) OnNewPost?.Invoke(p);
         });
 
         await _hub.StartAsync();

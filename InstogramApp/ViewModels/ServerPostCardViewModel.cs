@@ -13,6 +13,8 @@ public partial class ServerPostCardViewModel : ViewModelBase
     private readonly MainWindowViewModel _main;
     private PostDto _post;
 
+    public Guid PostId => _post.Id;
+
     public string AuthorDisplayName => _post.AuthorDisplayName;
     public string AuthorUsername    => $"@{_post.AuthorUsername}";
     public string AuthorInitial => Initial(_post.AuthorDisplayName);
