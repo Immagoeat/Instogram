@@ -63,7 +63,7 @@ public partial class AdminUserRowViewModel : ViewModelBase
     public Guid   Id          { get; }
     public string Username    { get; }
     public string DisplayName { get; }
-    public bool   IsMaster    { get; }
+    [ObservableProperty] private bool   _isMaster;
     [ObservableProperty] private bool   _isBanned;
     [ObservableProperty] private string _banReason = "";
 
@@ -78,8 +78,81 @@ public partial class AdminUserRowViewModel : ViewModelBase
         BanReason    = dto.BanReason;
     }
 
-    [RelayCommand] async Task Ban()   => await _parent.BanUserAsync(Id, BanReason);
-    [RelayCommand] async Task Unban() => await _parent.UnbanUserAsync(Id);
+    [RelayCommand] async Task Ban()     => await _parent.BanUserAsync(Id, BanReason);
+    [RelayCommand] async Task Unban()   => await _parent.UnbanUserAsync(Id);
+    [RelayCommand] async Task Promote() => await _parent.PromoteUserAsync(Id);
+    [RelayCommand] async Task Demote()  => await _parent.DemoteUserAsync(Id);
+}
+
+public partial class AdminPostRowViewModel : ViewModelBase
+{
+    private readonly AdminViewModel _parent;
+    public Guid   Id           { get; }
+    public string Caption      { get; }
+    public string AuthorName   { get; }
+    public string TimeLabel    { get; }
+    public string HasMedia     { get; }
+    public int    CommentCount { get; }
+    [ObservableProperty] private bool _expanded;
+    public ObservableCollection<AdminCommentRowViewModel> Comments { get; } = new();
+
+    public AdminPostRowViewModel(AdminPostDto dto, AdminViewModel parent)
+    {
+        _parent      = parent;
+        Id           = dto.Id;
+        Caption      = string.IsNullOrWhiteSpace(dto.Caption) ? "(no caption)" : dto.Caption;
+        AuthorName   = $"@{dto.AuthorName}";
+        TimeLabel    = FormatAge(dto.CreatedAt);
+        CommentCount = dto.CommentCount;
+        HasMedia     = !string.IsNullOrEmpty(dto.ImageUrl) ? "📷 Photo"
+                     : !string.IsNullOrEmpty(dto.VideoUrl) ? "🎥 Video" : "";
+    }
+
+    [RelayCommand] async Task DeletePost() => await _parent.DeleteAdminPostAsync(Id);
+
+    [RelayCommand]
+    async Task ToggleComments()
+    {
+        Expanded = !Expanded;
+        if (Expanded && Comments.Count == 0)
+            await _parent.LoadPostCommentsAsync(this);
+    }
+}
+
+public partial class AdminCommentRowViewModel : ViewModelBase
+{
+    private readonly AdminViewModel _parent;
+    public Guid   Id         { get; }
+    public string AuthorName { get; }
+    public string Text       { get; }
+    public string TimeLabel  { get; }
+
+    public AdminCommentRowViewModel(AdminCommentDto dto, AdminViewModel parent)
+    {
+        _parent    = parent;
+        Id         = dto.Id;
+        AuthorName = $"@{dto.AuthorName}";
+        Text       = dto.Text;
+        TimeLabel  = FormatAge(dto.CreatedAt);
+    }
+
+    [RelayCommand] async Task Delete() => await _parent.DeleteAdminCommentAsync(Id, this);
+}
+
+public partial class AdminReportRowViewModel : ViewModelBase
+{
+    public Guid   Id            { get; }
+    public string Body          { get; }
+    public string TimeLabel     { get; }
+    public Guid?  RelatedPostId { get; }
+
+    public AdminReportRowViewModel(AdminReportDto dto)
+    {
+        Id            = dto.Id;
+        Body          = dto.Body;
+        TimeLabel     = FormatAge(dto.CreatedAt);
+        RelatedPostId = dto.RelatedPostId;
+    }
 }
 
 // ── Main AdminViewModel ───────────────────────────────────────────────────────
@@ -88,7 +161,6 @@ public partial class AdminViewModel : ViewModelBase
 {
     private readonly MainWindowViewModel _main;
 
-    // ── Tabs ──────────────────────────────────────────────────────────────────
     [ObservableProperty] private int _tabIndex = 0;
 
     // ── Flags tab ─────────────────────────────────────────────────────────────
@@ -109,12 +181,25 @@ public partial class AdminViewModel : ViewModelBase
     [ObservableProperty] private bool   _usersBusy;
     [ObservableProperty] private string _usersStatus = "";
 
+    // ── Posts tab ─────────────────────────────────────────────────────────────
+    public ObservableCollection<AdminPostRowViewModel> AdminPosts { get; } = new();
+    [ObservableProperty] private string _postSearch  = "";
+    [ObservableProperty] private bool   _postsBusy;
+    [ObservableProperty] private string _postsStatus = "";
+
+    // ── Reports tab ───────────────────────────────────────────────────────────
+    public ObservableCollection<AdminReportRowViewModel> Reports { get; } = new();
+    [ObservableProperty] private bool   _reportsBusy;
+    [ObservableProperty] private string _reportsStatus = "";
+
     public AdminViewModel(MainWindowViewModel main)
     {
         _main = main;
         _ = LoadFlagsAsync();
         _ = LoadWordsAsync();
         _ = LoadUsersAsync();
+        _ = LoadPostsAsync();
+        _ = LoadReportsAsync();
     }
 
     [RelayCommand] void Back() => _main.Navigate(new FeedViewModel(_main));
@@ -146,7 +231,7 @@ public partial class AdminViewModel : ViewModelBase
         if (ok)
         {
             var row = FindFlag(flagId);
-            if (row != null) { Flags.Remove(row); }
+            if (row != null) Flags.Remove(row);
             FlagsStatus = resolution == "deleted" ? "Content deleted." : "Flag dismissed.";
         }
         else FlagsStatus = "Failed to resolve flag.";
@@ -234,4 +319,88 @@ public partial class AdminViewModel : ViewModelBase
         UsersStatus = ok ? "User unbanned." : "Failed to unban user.";
         if (ok) await LoadUsersAsync();
     }
+
+    public async Task PromoteUserAsync(Guid userId)
+    {
+        var ok = await ServerClient.Instance.PromoteUserAsync(userId);
+        UsersStatus = ok ? "User promoted to master." : "Failed to promote user.";
+        if (ok) await LoadUsersAsync();
+    }
+
+    public async Task DemoteUserAsync(Guid userId)
+    {
+        var ok = await ServerClient.Instance.DemoteUserAsync(userId);
+        UsersStatus = ok ? "User demoted." : "Failed to demote user.";
+        if (ok) await LoadUsersAsync();
+    }
+
+    // ── Posts ─────────────────────────────────────────────────────────────────
+
+    [RelayCommand]
+    async Task SearchPosts()
+    {
+        PostsBusy = true;
+        PostsStatus = "";
+        try
+        {
+            var q    = PostSearch.Trim();
+            var list = await ServerClient.Instance.GetAdminPostsAsync(string.IsNullOrEmpty(q) ? null : q);
+            AdminPosts.Clear();
+            if (list != null) foreach (var p in list) AdminPosts.Add(new AdminPostRowViewModel(p, this));
+        }
+        catch { PostsStatus = "Failed to load posts."; }
+        finally { PostsBusy = false; }
+    }
+
+    private Task LoadPostsAsync() => SearchPostsCommand.ExecuteAsync(null);
+
+    public async Task DeleteAdminPostAsync(Guid postId)
+    {
+        var ok = await ServerClient.Instance.DeletePostAsync(postId);
+        PostsStatus = ok ? "Post deleted." : "Failed to delete post.";
+        if (ok)
+        {
+            AdminPostRowViewModel? row = null;
+            foreach (var p in AdminPosts) if (p.Id == postId) { row = p; break; }
+            if (row != null) AdminPosts.Remove(row);
+        }
+    }
+
+    public async Task LoadPostCommentsAsync(AdminPostRowViewModel post)
+    {
+        var list = await ServerClient.Instance.GetAdminPostCommentsAsync(post.Id);
+        post.Comments.Clear();
+        if (list != null)
+            foreach (var c in list) post.Comments.Add(new AdminCommentRowViewModel(c, this));
+    }
+
+    public async Task DeleteAdminCommentAsync(Guid commentId, AdminCommentRowViewModel row)
+    {
+        var ok = await ServerClient.Instance.DeleteAdminCommentAsync(commentId);
+        if (!ok) { PostsStatus = "Failed to delete comment."; return; }
+        foreach (var p in AdminPosts)
+        {
+            if (p.Comments.Contains(row)) { p.Comments.Remove(row); break; }
+        }
+        PostsStatus = "Comment deleted.";
+    }
+
+    // ── Reports ───────────────────────────────────────────────────────────────
+
+    [RelayCommand]
+    async Task LoadReports()
+    {
+        ReportsBusy = true;
+        ReportsStatus = "";
+        try
+        {
+            var list = await ServerClient.Instance.GetAdminReportsAsync();
+            Reports.Clear();
+            if (list != null) foreach (var r in list) Reports.Add(new AdminReportRowViewModel(r));
+        }
+        catch { ReportsStatus = "Failed to load reports."; }
+        finally { ReportsBusy = false; }
+    }
+
+    private Task LoadReportsAsync() => LoadReportsCommand.ExecuteAsync(null);
 }

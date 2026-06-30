@@ -9,10 +9,12 @@ public partial class AdminView : UserControl
     public AdminView() => InitializeComponent();
     AdminViewModel VM => (AdminViewModel)DataContext!;
 
-    void OnBack(object? s, RoutedEventArgs e)         => VM.BackCommand.Execute(null);
-    void OnRefreshFlags(object? s, RoutedEventArgs e) => VM.LoadFlagsCommand.Execute(null);
-    void OnAddWord(object? s, RoutedEventArgs e)      => VM.AddWordCommand.Execute(null);
-    void OnSearchUsers(object? s, RoutedEventArgs e)  => VM.SearchUsersCommand.Execute(null);
+    void OnBack(object? s, RoutedEventArgs e)          => VM.BackCommand.Execute(null);
+    void OnRefreshFlags(object? s, RoutedEventArgs e)  => VM.LoadFlagsCommand.Execute(null);
+    void OnAddWord(object? s, RoutedEventArgs e)       => VM.AddWordCommand.Execute(null);
+    void OnSearchUsers(object? s, RoutedEventArgs e)   => VM.SearchUsersCommand.Execute(null);
+    void OnSearchPosts(object? s, RoutedEventArgs e)   => VM.SearchPostsCommand.Execute(null);
+    void OnRefreshReports(object? s, RoutedEventArgs e)=> VM.LoadReportsCommand.Execute(null);
 
     void OnDismissFlag(object? s, RoutedEventArgs e)
     {
@@ -42,5 +44,35 @@ public partial class AdminView : UserControl
     {
         if (s is Button btn && btn.Tag is AdminUserRowViewModel row)
             row.UnbanCommand.Execute(null);
+    }
+
+    void OnPromoteUser(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is AdminUserRowViewModel row)
+            row.PromoteCommand.Execute(null);
+    }
+
+    void OnDemoteUser(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is AdminUserRowViewModel row)
+            row.DemoteCommand.Execute(null);
+    }
+
+    void OnDeletePost(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is AdminPostRowViewModel row)
+            row.DeletePostCommand.Execute(null);
+    }
+
+    void OnToggleComments(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is AdminPostRowViewModel row)
+            row.ToggleCommentsCommand.Execute(null);
+    }
+
+    void OnDeleteComment(object? s, RoutedEventArgs e)
+    {
+        if (s is Button btn && btn.Tag is AdminCommentRowViewModel row)
+            row.DeleteCommand.Execute(null);
     }
 }

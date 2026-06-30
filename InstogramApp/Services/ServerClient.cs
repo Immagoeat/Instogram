@@ -72,6 +72,16 @@ public record AdminUserDto(
     Guid Id, string Username, string DisplayName,
     bool IsVerified, bool IsMaster, bool IsBanned, string BanReason, DateTime CreatedAt);
 
+public record AdminPostDto(
+    Guid Id, string Caption, string Tags, string ImageUrl, string VideoUrl, DateTime CreatedAt,
+    Guid AuthorId, string AuthorName, int CommentCount);
+
+public record AdminCommentDto(
+    Guid Id, string Text, DateTime CreatedAt, Guid AuthorId, string AuthorName);
+
+public record AdminReportDto(
+    Guid Id, string Body, Guid? RelatedPostId, DateTime CreatedAt, bool IsRead, Guid ReporterActorId);
+
 // ── ServerClient ──────────────────────────────────────────────────────────────
 
 public class ServerClient
@@ -495,6 +505,37 @@ public class ServerClient
         var resp = await _http.PostAsync($"admin/users/{userId}/unban", null);
         return resp.IsSuccessStatusCode;
     }
+
+    public async Task<bool> PromoteUserAsync(Guid userId)
+    {
+        var resp = await _http.PostAsync($"admin/users/{userId}/promote", null);
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> DemoteUserAsync(Guid userId)
+    {
+        var resp = await _http.PostAsync($"admin/users/{userId}/demote", null);
+        return resp.IsSuccessStatusCode;
+    }
+
+    public Task<List<AdminPostDto>?> GetAdminPostsAsync(string? q = null, int page = 0)
+    {
+        var url = $"admin/posts?page={page}";
+        if (!string.IsNullOrEmpty(q)) url += $"&q={Uri.EscapeDataString(q)}";
+        return _http.GetFromJsonAsync<List<AdminPostDto>>(url, JsonOpts);
+    }
+
+    public Task<List<AdminCommentDto>?> GetAdminPostCommentsAsync(Guid postId) =>
+        _http.GetFromJsonAsync<List<AdminCommentDto>>($"admin/posts/{postId}/comments", JsonOpts);
+
+    public async Task<bool> DeleteAdminCommentAsync(Guid commentId)
+    {
+        var resp = await _http.DeleteAsync($"admin/comments/{commentId}");
+        return resp.IsSuccessStatusCode;
+    }
+
+    public Task<List<AdminReportDto>?> GetAdminReportsAsync(int page = 0) =>
+        _http.GetFromJsonAsync<List<AdminReportDto>>($"admin/reports?page={page}", JsonOpts);
 
     // ── Internal response types ───────────────────────────────────────────────
 

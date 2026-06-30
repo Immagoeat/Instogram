@@ -71,6 +71,31 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Stories ADD COLUMN VideoUrl  TEXT NOT NULL DEFAULT ''"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Users   ADD COLUMN IsBanned  INTEGER NOT NULL DEFAULT 0"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Users   ADD COLUMN BanReason TEXT    NOT NULL DEFAULT ''"); } catch { }
+
+    // ── First-run master bootstrap ────────────────────────────────────────────
+    // If MASTER_PASSWORD is set and no master user exists yet, create one automatically.
+    var masterPassword = app.Configuration["MasterPassword"]
+        ?? Environment.GetEnvironmentVariable("MASTER_PASSWORD");
+    if (!string.IsNullOrWhiteSpace(masterPassword) && !db.Users.Any(u => u.IsMaster))
+    {
+        var masterUsername = (app.Configuration["MasterUsername"]
+            ?? Environment.GetEnvironmentVariable("MASTER_USERNAME")
+            ?? "admin").Trim().ToLowerInvariant();
+        var masterDisplay  = app.Configuration["MasterDisplayName"]
+            ?? Environment.GetEnvironmentVariable("MASTER_DISPLAY_NAME")
+            ?? "Admin";
+        var master = new User
+        {
+            Username     = masterUsername,
+            DisplayName  = masterDisplay,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(masterPassword),
+            IsMaster     = true,
+            IsVerified   = true
+        };
+        db.Users.Add(master);
+        db.SaveChanges();
+        Console.WriteLine($"[setup] Master account created: @{masterUsername}");
+    }
 }
 
 app.UseCors();
@@ -1045,6 +1070,93 @@ admin.MapPost("/users/{id:guid}/unban", async (Guid id, HttpContext ctx, AppDbCo
     target.BanReason = "";
     await db.SaveChangesAsync();
     return Results.Ok();
+});
+
+admin.MapPost("/users/{id:guid}/promote", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var target = await db.Users.FindAsync(id);
+    if (target == null) return Results.NotFound();
+    target.IsMaster   = true;
+    target.IsVerified = true;
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+admin.MapPost("/users/{id:guid}/demote", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var me = TokenService.UserIdFromContext(ctx);
+    if (id == me) return Results.BadRequest("Cannot demote yourself");
+    var target = await db.Users.FindAsync(id);
+    if (target == null) return Results.NotFound();
+    target.IsMaster = false;
+    await db.SaveChangesAsync();
+    return Results.Ok();
+});
+
+// ── Posts moderation ──────────────────────────────────────────────────────────
+
+admin.MapGet("/posts", async (HttpContext ctx, AppDbContext db, string? q = null, int page = 0) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var query = db.Posts.Include(p => p.Author).Include(p => p.Comments).AsQueryable();
+    if (!string.IsNullOrWhiteSpace(q))
+        query = query.Where(p => p.Caption.Contains(q) || p.Author.Username.Contains(q));
+    var posts = await query
+        .OrderByDescending(p => p.CreatedAt)
+        .Skip(page * 30).Take(30)
+        .ToListAsync();
+    return Results.Ok(posts.Select(p => new
+    {
+        p.Id, p.Caption, p.Tags, p.ImageUrl, p.VideoUrl, p.CreatedAt,
+        AuthorId     = p.AuthorId,
+        AuthorName   = p.Author.Username,
+        CommentCount = p.Comments.Count
+    }));
+});
+
+admin.MapGet("/posts/{id:guid}/comments", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var comments = await db.Comments
+        .Include(c => c.Author)
+        .Where(c => c.PostId == id)
+        .OrderBy(c => c.CreatedAt)
+        .ToListAsync();
+    return Results.Ok(comments.Select(c => new
+    {
+        c.Id, c.Text, c.CreatedAt,
+        AuthorId   = c.AuthorId,
+        AuthorName = c.Author.Username
+    }));
+});
+
+admin.MapDelete("/comments/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var c = await db.Comments.FindAsync(id);
+    if (c == null) return Results.NotFound();
+    db.Comments.Remove(c);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+
+admin.MapGet("/reports", async (HttpContext ctx, AppDbContext db, int page = 0) =>
+{
+    if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
+    var reports = await db.Notifications
+        .Where(n => n.Type == "report")
+        .OrderByDescending(n => n.CreatedAt)
+        .Skip(page * 50).Take(50)
+        .ToListAsync();
+    return Results.Ok(reports.Select(r => new
+    {
+        r.Id, r.Body, r.RelatedPostId, r.CreatedAt, r.IsRead,
+        ReporterActorId = r.ActorId
+    }));
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
