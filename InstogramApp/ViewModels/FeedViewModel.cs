@@ -27,7 +27,7 @@ public partial class FeedViewModel : ViewModelBase, IDisposable
 
         ServerClient.Instance.OnNewPost += OnNewPostArrived;
 
-        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _refreshTimer.Tick += (_, _) => _ = SilentRefreshAsync();
         _refreshTimer.Start();
 

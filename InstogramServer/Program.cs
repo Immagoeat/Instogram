@@ -67,11 +67,24 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    // Add columns if upgrading an existing database
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Posts   ADD COLUMN VideoUrl  TEXT NOT NULL DEFAULT ''"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Stories ADD COLUMN VideoUrl  TEXT NOT NULL DEFAULT ''"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Users   ADD COLUMN IsBanned  INTEGER NOT NULL DEFAULT 0"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Users   ADD COLUMN BanReason TEXT    NOT NULL DEFAULT ''"); } catch { }
+    // Add columns added after initial schema — each wrapped individually so one
+    // failure (column already exists) doesn't block the rest.
+    void TryAlter(string sql) { try { db.Database.ExecuteSqlRaw(sql); } catch { } }
+    TryAlter("ALTER TABLE Posts   ADD COLUMN VideoUrl    TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Stories ADD COLUMN VideoUrl    TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN IsVerified  INTEGER NOT NULL DEFAULT 0");
+    TryAlter("ALTER TABLE Users   ADD COLUMN IsMaster    INTEGER NOT NULL DEFAULT 0");
+    TryAlter("ALTER TABLE Users   ADD COLUMN IsBanned    INTEGER NOT NULL DEFAULT 0");
+    TryAlter("ALTER TABLE Users   ADD COLUMN BanReason   TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN NotifyDMs              INTEGER NOT NULL DEFAULT 1");
+    TryAlter("ALTER TABLE Users   ADD COLUMN NotifyFollowedPosts    INTEGER NOT NULL DEFAULT 1");
+    TryAlter("ALTER TABLE Users   ADD COLUMN AccentColor TEXT    NOT NULL DEFAULT '#8b5cf6'");
+    TryAlter("ALTER TABLE Users   ADD COLUMN AvatarUrl   TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Bio         TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Website     TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Email       TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Phone       TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Address     TEXT    NOT NULL DEFAULT ''");
 
     // ── First-run master bootstrap ────────────────────────────────────────────
     // If MASTER_PASSWORD is set and no master user exists yet, create one automatically.
