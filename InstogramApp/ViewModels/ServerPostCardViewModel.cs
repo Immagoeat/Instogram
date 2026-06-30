@@ -48,8 +48,11 @@ public partial class ServerPostCardViewModel : ViewModelBase
     [ObservableProperty] private List<string> _commentPreviews = new();
     [ObservableProperty] private int    _commentCount;
 
+    private readonly HashSet<Guid> _seenCommentIds = new();
+
     public void AddComment(CommentDto c)
     {
+        if (!_seenCommentIds.Add(c.Id)) return; // already applied (e.g. own comment + SignalR echo)
         CommentCount++;
         var preview = $"@{c.AuthorUsername}: {c.Text}";
         var list = CommentPreviews.ToList();
@@ -80,6 +83,10 @@ public partial class ServerPostCardViewModel : ViewModelBase
             .TakeLast(3)
             .Select(c => $"@{c.AuthorUsername}: {c.Text}")
             .ToList() ?? new();
+        // Seed seen IDs so SignalR echoes of already-loaded comments are ignored
+        if (_post.Comments != null)
+            foreach (var c in _post.Comments)
+                _seenCommentIds.Add(c.Id);
     }
 
     [RelayCommand]
@@ -137,11 +144,7 @@ public partial class ServerPostCardViewModel : ViewModelBase
         if (c != null)
         {
             CommentText = "";
-            var preview = $"@{c.AuthorUsername}: {c.Text}";
-            var list = new List<string>(CommentPreviews) { preview };
-            if (list.Count > 3) list = list.TakeLast(3).ToList();
-            CommentPreviews = list;
-            OnPropertyChanged(nameof(CommentCount));
+            AddComment(c);
         }
     }
 
