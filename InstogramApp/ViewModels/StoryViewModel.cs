@@ -313,23 +313,31 @@ public partial class ServerStoryBubbleViewModel : ViewModelBase
     private readonly MainWindowViewModel _main;
     private readonly List<StoryDto>      _stories;
 
-    public string AuthorUsername  { get; }
-    public string AuthorName      { get; }
-    public string AccentColor     { get; }
-    public new string Initial     { get; }
-    public bool   HasUnseen       { get; }
+    public Guid   AuthorId       { get; }
+    public string AuthorUsername { get; }
+    public string AuthorName     { get; }
+    public string AccentColor    { get; }
+    public new string Initial    { get; }
+    [ObservableProperty] private bool _hasUnseen;
 
     public ServerStoryBubbleViewModel(List<StoryDto> stories, MainWindowViewModel main)
     {
-        _main        = main;
-        _stories     = stories;
-        var first    = stories[0];
+        _main          = main;
+        _stories       = stories;
+        var first      = stories[0];
+        AuthorId       = first.AuthorId;
         AuthorUsername = first.AuthorUsername;
-        AuthorName   = first.AuthorDisplayName;
-        AccentColor  = first.AuthorAccent;
-        Initial      = first.AuthorDisplayName.Length > 0
+        AuthorName     = first.AuthorDisplayName;
+        AccentColor    = first.AuthorAccent;
+        Initial        = first.AuthorDisplayName.Length > 0
             ? first.AuthorDisplayName[0].ToString().ToUpper() : "?";
-        HasUnseen    = stories.Any(s => !s.HasSeen);
+        HasUnseen      = stories.Any(s => !s.HasSeen);
+    }
+
+    public void AddStory(StoryDto story)
+    {
+        _stories.Add(story);
+        HasUnseen = true;
     }
 
     [RelayCommand]

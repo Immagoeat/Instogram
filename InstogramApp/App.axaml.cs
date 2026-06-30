@@ -43,11 +43,13 @@ public partial class App : Application
 
             await ServerClient.Instance.ConnectHubAsync();
 
-            AppState.Instance.IsServerMode  = true;
-            AppState.Instance.ServerUserId  = me.Id.ToString();
-            AppState.Instance.ServerUsername = me.Username;
-            AppState.Instance.ServerDisplay  = me.DisplayName;
-            AppState.Instance.ServerAccent   = me.AccentColor;
+            AppState.Instance.IsServerMode     = true;
+            AppState.Instance.ServerUserId     = me.Id.ToString();
+            AppState.Instance.ServerUsername   = me.Username;
+            AppState.Instance.ServerDisplay    = me.DisplayName;
+            AppState.Instance.ServerAccent     = me.AccentColor;
+            AppState.Instance.ServerIsMaster   = me.IsMaster;
+            AppState.Instance.ServerIsVerified = me.IsVerified;
 
             ServerConfig.Save(new ServerSettings(cfg.ServerUrl, cfg.Token,
                 me.Username, me.DisplayName, me.AccentColor));

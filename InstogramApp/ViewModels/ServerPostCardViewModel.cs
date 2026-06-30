@@ -46,8 +46,17 @@ public partial class ServerPostCardViewModel : ViewModelBase
     [ObservableProperty] private string _likeLabel = "";
     [ObservableProperty] private string _commentText = "";
     [ObservableProperty] private List<string> _commentPreviews = new();
+    [ObservableProperty] private int    _commentCount;
 
-    public int CommentCount => _post.Comments?.Count() ?? 0;
+    public void AddComment(CommentDto c)
+    {
+        CommentCount++;
+        var preview = $"@{c.AuthorUsername}: {c.Text}";
+        var list = CommentPreviews.ToList();
+        list.Add(preview);
+        if (list.Count > 3) list.RemoveAt(0);
+        CommentPreviews = list;
+    }
     public bool IsMyPost => AppState.Instance.ServerUserId == _post.AuthorId.ToString();
     public bool IsNotMyPost => !IsMyPost;
 
@@ -63,9 +72,10 @@ public partial class ServerPostCardViewModel : ViewModelBase
 
     void Refresh()
     {
-        LikeCount       = _post.LikeCount;
-        IsLiked         = _post.IsLiked;
-        LikeLabel       = MakeLikeLabel(_post.IsLiked, _post.LikeCount);
+        LikeCount    = _post.LikeCount;
+        IsLiked      = _post.IsLiked;
+        LikeLabel    = MakeLikeLabel(_post.IsLiked, _post.LikeCount);
+        CommentCount = _post.Comments?.Count() ?? 0;
         CommentPreviews = _post.Comments?
             .TakeLast(3)
             .Select(c => $"@{c.AuthorUsername}: {c.Text}")

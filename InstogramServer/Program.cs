@@ -540,7 +540,8 @@ posts.MapPost("/{id:guid}/like", async (Guid id, HttpContext ctx, AppDbContext d
     return Results.Ok(new { liked = !liked, count });
 });
 
-posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
+posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpContext ctx, AppDbContext db,
+    AutomodService automod, IHubContext<InstogramHub> hub) =>
 {
     var me   = TokenService.UserIdFromContext(ctx);
     var post = await db.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
@@ -563,7 +564,9 @@ posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpCont
         await automod.FlagAsync(me, actor?.Username ?? "?",
             AutomodContentType.Comment, comment.Id, req.Text, hit);
 
-    return Results.Ok(new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = actor?.Username, comment.Text, comment.CreatedAt });
+    var payload = new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = actor?.Username, comment.Text, comment.CreatedAt };
+    await hub.Clients.All.SendAsync("NewComment", payload);
+    return Results.Ok(payload);
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -572,7 +575,8 @@ posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpCont
 
 var stories = app.MapGroup("/stories").RequireAuthorization();
 
-stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
+stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext db,
+    AutomodService automod, IHubContext<InstogramHub> hub) =>
 {
     var me = TokenService.UserIdFromContext(ctx);
     var author = await db.Users.FindAsync(me);
@@ -597,7 +601,9 @@ stories.MapPost("", async (CreateStoryRequest req, HttpContext ctx, AppDbContext
         await automod.FlagAsync(me, author.Username,
             AutomodContentType.Story, story.Id, req.Text, hit);
 
-    return Results.Ok(StoryDto(story, author, false));
+    var dto = StoryDto(story, author, false);
+    await hub.Clients.All.SendAsync("NewStory", dto);
+    return Results.Ok(dto);
 });
 
 stories.MapPost("/{id:guid}/image", async (Guid id, HttpContext ctx, AppDbContext db) =>

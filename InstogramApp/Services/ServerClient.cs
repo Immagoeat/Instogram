@@ -112,7 +112,9 @@ public class ServerClient
     public event Action<Guid>?              OnCallEnded;
     public event Action<Guid, string>?      OnConversationRenamed;
     public event Action<Guid, Guid, string>? OnMemberAdded;
-    public event Action<PostDto>?           OnNewPost;
+    public event Action<PostDto>?            OnNewPost;
+    public event Action<CommentDto>?         OnNewComment;
+    public event Action<StoryDto>?           OnNewStory;
 
     private ServerClient() { }
 
@@ -188,6 +190,16 @@ public class ServerClient
         {
             var p = Deserialize<PostDto>(raw);
             if (p != null) OnNewPost?.Invoke(p);
+        });
+        _hub.On<object>("NewComment", raw =>
+        {
+            var c = Deserialize<CommentDto>(raw);
+            if (c != null) OnNewComment?.Invoke(c);
+        });
+        _hub.On<object>("NewStory", raw =>
+        {
+            var s = Deserialize<StoryDto>(raw);
+            if (s != null) OnNewStory?.Invoke(s);
         });
 
         await _hub.StartAsync();
