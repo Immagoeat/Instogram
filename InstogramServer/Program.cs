@@ -70,21 +70,56 @@ using (var scope = app.Services.CreateScope())
     // Add columns added after initial schema — each wrapped individually so one
     // failure (column already exists) doesn't block the rest.
     void TryAlter(string sql) { try { db.Database.ExecuteSqlRaw(sql); } catch { } }
-    TryAlter("ALTER TABLE Posts   ADD COLUMN VideoUrl    TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Stories ADD COLUMN VideoUrl    TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Users   ADD COLUMN IsVerified  INTEGER NOT NULL DEFAULT 0");
-    TryAlter("ALTER TABLE Users   ADD COLUMN IsMaster    INTEGER NOT NULL DEFAULT 0");
-    TryAlter("ALTER TABLE Users   ADD COLUMN IsBanned    INTEGER NOT NULL DEFAULT 0");
-    TryAlter("ALTER TABLE Users   ADD COLUMN BanReason   TEXT    NOT NULL DEFAULT ''");
+
+    // New columns added after initial schema (idempotent — each wrapped individually)
+    TryAlter("ALTER TABLE Posts   ADD COLUMN VideoUrl      TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Posts   ADD COLUMN ImageUrl      TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Stories ADD COLUMN VideoUrl      TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Stories ADD COLUMN ImageUrl      TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Stories ADD COLUMN TextX         REAL    NOT NULL DEFAULT 0.5");
+    TryAlter("ALTER TABLE Stories ADD COLUMN TextY         REAL    NOT NULL DEFAULT 0.5");
+    TryAlter("ALTER TABLE Stories ADD COLUMN TextScale     REAL    NOT NULL DEFAULT 1.0");
+    TryAlter("ALTER TABLE Stories ADD COLUMN TextRotation  REAL    NOT NULL DEFAULT 0.0");
+    TryAlter("ALTER TABLE Stories ADD COLUMN TaggedUsers   TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN IsVerified    INTEGER NOT NULL DEFAULT 0");
+    TryAlter("ALTER TABLE Users   ADD COLUMN IsMaster      INTEGER NOT NULL DEFAULT 0");
+    TryAlter("ALTER TABLE Users   ADD COLUMN IsBanned      INTEGER NOT NULL DEFAULT 0");
+    TryAlter("ALTER TABLE Users   ADD COLUMN BanReason     TEXT    NOT NULL DEFAULT ''");
     TryAlter("ALTER TABLE Users   ADD COLUMN NotifyDMs              INTEGER NOT NULL DEFAULT 1");
     TryAlter("ALTER TABLE Users   ADD COLUMN NotifyFollowedPosts    INTEGER NOT NULL DEFAULT 1");
-    TryAlter("ALTER TABLE Users   ADD COLUMN AccentColor TEXT    NOT NULL DEFAULT '#8b5cf6'");
-    TryAlter("ALTER TABLE Users   ADD COLUMN AvatarUrl   TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Users   ADD COLUMN Bio         TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Users   ADD COLUMN Website     TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Users   ADD COLUMN Email       TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Users   ADD COLUMN Phone       TEXT    NOT NULL DEFAULT ''");
-    TryAlter("ALTER TABLE Users   ADD COLUMN Address     TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN AccentColor   TEXT    NOT NULL DEFAULT '#8b5cf6'");
+    TryAlter("ALTER TABLE Users   ADD COLUMN AvatarUrl     TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Bio           TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Website       TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Email         TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Phone         TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Users   ADD COLUMN Address       TEXT    NOT NULL DEFAULT ''");
+    TryAlter("ALTER TABLE Notifications ADD COLUMN RelatedPostId TEXT");
+
+    // New tables added after initial schema — CREATE IF NOT EXISTS is idempotent
+    TryAlter("""
+        CREATE TABLE IF NOT EXISTS BannedWords (
+            Id      TEXT NOT NULL PRIMARY KEY,
+            Word    TEXT NOT NULL DEFAULT '',
+            AddedBy TEXT NOT NULL DEFAULT '',
+            AddedAt TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """);
+    TryAlter("""
+        CREATE TABLE IF NOT EXISTS AutomodFlags (
+            Id          TEXT NOT NULL PRIMARY KEY,
+            AuthorId    TEXT NOT NULL DEFAULT '',
+            AuthorName  TEXT NOT NULL DEFAULT '',
+            ContentType INTEGER NOT NULL DEFAULT 0,
+            ContentId   TEXT,
+            Snippet     TEXT NOT NULL DEFAULT '',
+            MatchedWord TEXT NOT NULL DEFAULT '',
+            IsResolved  INTEGER NOT NULL DEFAULT 0,
+            ResolvedBy  TEXT NOT NULL DEFAULT '',
+            Resolution  TEXT NOT NULL DEFAULT '',
+            CreatedAt   TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """);
 
     // ── First-run master bootstrap ────────────────────────────────────────────
     // If MASTER_PASSWORD is set and no master user exists yet, create one automatically.
