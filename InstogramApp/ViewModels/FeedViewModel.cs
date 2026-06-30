@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,12 +44,7 @@ public partial class FeedViewModel : ViewModelBase, IDisposable
         Stories.Clear();
         try
         {
-            var feedTask    = ServerClient.Instance.GetFeedAsync();
-            var storiesTask = ServerClient.Instance.GetStoryFeedAsync();
-            await Task.WhenAll(feedTask, storiesTask);
-
-            var feed      = feedTask.Result;
-            var storyFeed = storiesTask.Result;
+            var (feed, storyFeed) = await FetchBothAsync();
 
             if (feed != null)
                 foreach (var p in feed)
@@ -72,17 +68,20 @@ public partial class FeedViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private static async Task<(List<PostDto>? feed, List<StoryDto>? stories)> FetchBothAsync()
+    {
+        var feedTask    = ServerClient.Instance.GetFeedAsync();
+        var storiesTask = ServerClient.Instance.GetStoryFeedAsync();
+        await Task.WhenAll(feedTask, storiesTask);
+        return (feedTask.Result, storiesTask.Result);
+    }
+
     // Silently merge new posts/stories from server without clearing the list.
     private async Task SilentRefreshAsync()
     {
         try
         {
-            var feedTask    = ServerClient.Instance.GetFeedAsync();
-            var storiesTask = ServerClient.Instance.GetStoryFeedAsync();
-            await Task.WhenAll(feedTask, storiesTask);
-
-            var feed      = feedTask.Result;
-            var storyFeed = storiesTask.Result;
+            var (feed, storyFeed) = await FetchBothAsync();
 
             if (feed != null)
             {

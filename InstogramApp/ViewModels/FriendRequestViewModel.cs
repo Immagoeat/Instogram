@@ -70,10 +70,13 @@ public partial class FriendsViewModel : ViewModelBase
         var incomingTask = ServerClient.Instance.GetIncomingRequestsAsync();
         var outgoingTask = ServerClient.Instance.GetOutgoingRequestsAsync();
         await Task.WhenAll(friendsTask, incomingTask, outgoingTask);
+        var friends  = friendsTask.Result;
+        var incoming = incomingTask.Result;
+        var outgoing = outgoingTask.Result;
 
         Friends.Clear();
-        if (friendsTask.Result != null)
-            foreach (var f in friendsTask.Result)
+        if (friends != null)
+            foreach (var f in friends)
                 Friends.Add(new FriendRowViewModel
                 {
                     UserId = f.Id, Username = f.Username, DisplayName = f.DisplayName,
@@ -81,8 +84,8 @@ public partial class FriendsViewModel : ViewModelBase
                 });
 
         Incoming.Clear();
-        if (incomingTask.Result != null)
-            foreach (var r in incomingTask.Result)
+        if (incoming != null)
+            foreach (var r in incoming)
                 Incoming.Add(new FriendRequestRowViewModel
                 {
                     RequestId = r.Id, UserId = r.SenderId,
@@ -91,8 +94,8 @@ public partial class FriendsViewModel : ViewModelBase
                 });
 
         Outgoing.Clear();
-        if (outgoingTask.Result != null)
-            foreach (var r in outgoingTask.Result)
+        if (outgoing != null)
+            foreach (var r in outgoing)
                 Outgoing.Add(new FriendRequestRowViewModel
                 {
                     RequestId = r.Id, UserId = r.RecipientId,

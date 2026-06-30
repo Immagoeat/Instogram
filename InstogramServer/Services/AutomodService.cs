@@ -7,11 +7,25 @@ namespace InstogramServer.Services;
 
 public class AutomodService(AppDbContext db)
 {
-    // Returns the first matched word, or null if clean
+    private List<string>? _cachedWords;
+    private DateTime _cacheExpiry = DateTime.MinValue;
+
+    private async Task<List<string>> GetWordsAsync()
+    {
+        if (_cachedWords != null && DateTime.UtcNow < _cacheExpiry)
+            return _cachedWords;
+        _cachedWords = await db.BannedWords.Select(w => w.Word).ToListAsync();
+        _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
+        return _cachedWords;
+    }
+
+    // Invalidate cache when word list changes
+    public void InvalidateCache() => _cacheExpiry = DateTime.MinValue;
+
     public async Task<string?> CheckAsync(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return null;
-        var words = await db.BannedWords.Select(w => w.Word).ToListAsync();
+        var words = await GetWordsAsync();
         var lower = text.ToLowerInvariant();
         foreach (var word in words)
         {

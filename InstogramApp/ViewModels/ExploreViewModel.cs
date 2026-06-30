@@ -118,6 +118,7 @@ public partial class ExploreViewModel : ViewModelBase
     partial void OnQueryChanged(string value)
     {
         _debounce?.Cancel();
+        _debounce?.Dispose();
         _debounce = new CancellationTokenSource();
         var token = _debounce.Token;
         _ = Task.Delay(320, token).ContinueWith(_ =>

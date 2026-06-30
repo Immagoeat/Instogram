@@ -250,7 +250,7 @@ users.MapGet("/search", async (string q, AppDbContext db) =>
     var results = await db.Users
         .Where(u => u.Username.Contains(q) || u.DisplayName.Contains(q))
         .Take(20)
-        .Select(u => new { u.Id, u.Username, u.DisplayName, u.AccentColor })
+        .Select(u => new { u.Id, u.Username, u.DisplayName, u.AccentColor, u.IsVerified, u.IsMaster })
         .ToListAsync();
     return Results.Ok(results);
 });
@@ -263,11 +263,14 @@ users.MapGet("/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db) =>
         .Include(u => u.Following)
         .FirstOrDefaultAsync(u => u.Id == id);
     if (user == null) return Results.NotFound();
-    var hasPending = me != Guid.Empty && await db.FriendRequests.AnyAsync(r =>
-        r.SenderId == me && r.RecipientId == id && r.Status == FriendRequestStatus.Pending);
-    var isFriend = me != Guid.Empty && await db.FriendRequests.AnyAsync(r =>
-        r.Status == FriendRequestStatus.Accepted &&
-        ((r.SenderId == me && r.RecipientId == id) || (r.SenderId == id && r.RecipientId == me)));
+    // Single query for both friend states
+    var friendRequest = me != Guid.Empty
+        ? await db.FriendRequests.FirstOrDefaultAsync(r =>
+            (r.SenderId == me && r.RecipientId == id) ||
+            (r.SenderId == id && r.RecipientId == me))
+        : null;
+    var hasPending = friendRequest?.SenderId == me && friendRequest?.Status == FriendRequestStatus.Pending;
+    var isFriend   = friendRequest?.Status == FriendRequestStatus.Accepted;
     return Results.Ok(new
     {
         User = UserDto(user),
@@ -304,7 +307,7 @@ users.MapPost("/{id:guid}/follow", async (Guid id, HttpContext ctx, AppDbContext
         db.Notifications.Add(new Notification
         {
             RecipientId = id, ActorId = me, Type = "follow",
-            Body = $"@{actor?.Username} started following you"
+            Body = $"@{actor?.Username ?? "Someone"} started following you"
         });
 
     await db.SaveChangesAsync();
@@ -338,7 +341,7 @@ friends.MapPost("/request/{targetId:guid}", async (Guid targetId, HttpContext ct
     db.Notifications.Add(new Notification
     {
         RecipientId = targetId, ActorId = me, Type = "friend",
-        Body = $"@{actor?.Username} sent you a friend request"
+        Body = $"@{actor?.Username ?? "Someone"} sent you a friend request"
     });
     await db.SaveChangesAsync();
     return Results.Ok();
@@ -417,41 +420,37 @@ var posts = app.MapGroup("/posts").RequireAuthorization();
 posts.MapPost("", async (CreatePostRequest req, HttpContext ctx, AppDbContext db,
     AutomodService automod, IHubContext<InstogramHub> hub) =>
 {
-    var me = TokenService.UserIdFromContext(ctx);
+    var me    = TokenService.UserIdFromContext(ctx);
+    var actor = await db.Users.FindAsync(me);
+    if (actor == null) return Results.Unauthorized();
+
     var post = new Post { AuthorId = me, Caption = req.Caption.Trim(), Tags = req.Tags };
     db.Posts.Add(post);
 
     // Automod scan
     var hit = await automod.CheckAsync(req.Caption);
     if (hit != null)
-    {
-        var actor2 = await db.Users.FindAsync(me);
-        await automod.FlagAsync(me, actor2?.Username ?? "?",
-            AutomodContentType.Post, post.Id, req.Caption, hit);
-    }
-    var actor = await db.Users.FindAsync(me);
-    var followerIds = await db.Follows
-        .Where(f => f.FolloweeId == me)
+        await automod.FlagAsync(me, actor.Username, AutomodContentType.Post, post.Id, req.Caption, hit);
+
+    // Batch follower notifications in one query
+    var notifiableFollowers = await db.Follows
+        .Where(f => f.FolloweeId == me && f.Follower.NotifyFollowedPosts)
         .Select(f => f.FollowerId)
         .ToListAsync();
-    var notifiableFollowers = await db.Users
-        .Where(u => followerIds.Contains(u.Id) && u.NotifyFollowedPosts)
-        .Select(u => u.Id)
-        .ToListAsync();
-    foreach (var fid in notifiableFollowers)
-        db.Notifications.Add(new Notification
-        {
-            RecipientId = fid, ActorId = me, Type = "post",
-            RelatedPostId = post.Id,
-            Body = $"@{actor?.Username} shared a new post"
-        });
+    db.Notifications.AddRange(notifiableFollowers.Select(fid => new Notification
+    {
+        RecipientId = fid, ActorId = me, Type = "post",
+        RelatedPostId = post.Id,
+        Body = $"@{actor.Username} shared a new post"
+    }));
 
     await db.SaveChangesAsync();
     var created = await db.Posts
         .Include(p => p.Author)
         .Include(p => p.Likes)
         .Include(p => p.Comments).ThenInclude(c => c.Author)
-        .FirstAsync(p => p.Id == post.Id);
+        .FirstOrDefaultAsync(p => p.Id == post.Id);
+    if (created == null) return Results.Problem("Post created but could not be fetched");
     var dto = PostDto(created, me);
 
     // Broadcast to all connected clients so feeds update in real-time
@@ -525,7 +524,7 @@ posts.MapPost("/{id:guid}/like", async (Guid id, HttpContext ctx, AppDbContext d
             {
                 RecipientId = post.AuthorId, ActorId = me, Type = "like",
                 RelatedPostId = id,
-                Body = $"@{actor?.Username} liked your post"
+                Body = $"@{actor?.Username ?? "Someone"} liked your post"
             });
         }
     }
@@ -543,28 +542,29 @@ posts.MapPost("/{id:guid}/like", async (Guid id, HttpContext ctx, AppDbContext d
 posts.MapPost("/{id:guid}/comment", async (Guid id, CommentRequest req, HttpContext ctx, AppDbContext db,
     AutomodService automod, IHubContext<InstogramHub> hub) =>
 {
-    var me   = TokenService.UserIdFromContext(ctx);
-    var post = await db.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
+    var me    = TokenService.UserIdFromContext(ctx);
+    var post  = await db.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
     if (post == null) return Results.NotFound();
     var actor   = await db.Users.FindAsync(me);
-    var comment = new Comment { PostId = id, AuthorId = me, Text = req.Text.Trim() };
+    var trimmed = req.Text.Trim();
+    var comment = new Comment { PostId = id, AuthorId = me, Text = trimmed };
     db.Comments.Add(comment);
     if (post.AuthorId != me)
         db.Notifications.Add(new Notification
         {
             RecipientId = post.AuthorId, ActorId = me, Type = "comment",
             RelatedPostId = id,
-            Body = $"@{actor?.Username} commented: {(req.Text.Length > 40 ? req.Text[..37] + "…" : req.Text)}"
+            Body = $"@{actor?.Username ?? "Someone"} commented: {(trimmed.Length > 40 ? trimmed[..37] + "…" : trimmed)}"
         });
     await db.SaveChangesAsync();
 
-    // Automod scan
-    var hit = await automod.CheckAsync(req.Text);
+    // Automod scan (after save so comment has ID)
+    var hit = await automod.CheckAsync(trimmed);
     if (hit != null)
         await automod.FlagAsync(me, actor?.Username ?? "?",
-            AutomodContentType.Comment, comment.Id, req.Text, hit);
+            AutomodContentType.Comment, comment.Id, trimmed, hit);
 
-    var payload = new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = actor?.Username, comment.Text, comment.CreatedAt };
+    var payload = new { comment.Id, comment.PostId, comment.AuthorId, AuthorUsername = actor?.Username ?? "", comment.Text, comment.CreatedAt };
     await hub.Clients.All.SendAsync("NewComment", payload);
     return Results.Ok(payload);
 });
@@ -706,7 +706,8 @@ convs.MapPost("/dm", async (DmRequest req, HttpContext ctx, AppDbContext db) =>
     var created = await db.Conversations
         .Include(c => c.Members).ThenInclude(m => m.User)
         .Include(c => c.Messages)
-        .FirstAsync(c => c.Id == conv.Id);
+        .FirstOrDefaultAsync(c => c.Id == conv.Id);
+    if (created == null) return Results.Problem("Conversation created but could not be fetched");
     return Results.Ok(ConvDto(created, me));
 });
 
@@ -723,7 +724,8 @@ convs.MapPost("/group", async (GroupRequest req, HttpContext ctx, AppDbContext d
     var created = await db.Conversations
         .Include(c => c.Members).ThenInclude(m => m.User)
         .Include(c => c.Messages)
-        .FirstAsync(c => c.Id == conv.Id);
+        .FirstOrDefaultAsync(c => c.Id == conv.Id);
+    if (created == null) return Results.Problem("Conversation created but could not be fetched");
     return Results.Ok(ConvDto(created, me));
 });
 
@@ -985,7 +987,7 @@ admin.MapGet("/words", async (HttpContext ctx, AppDbContext db) =>
     return Results.Ok(words.Select(w => new { w.Id, w.Word, w.AddedBy, w.AddedAt }));
 });
 
-admin.MapPost("/words", async (AddWordRequest req, HttpContext ctx, AppDbContext db) =>
+admin.MapPost("/words", async (AddWordRequest req, HttpContext ctx, AppDbContext db, AutomodService automod) =>
 {
     if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
     var me = await db.Users.FindAsync(TokenService.UserIdFromContext(ctx));
@@ -995,16 +997,18 @@ admin.MapPost("/words", async (AddWordRequest req, HttpContext ctx, AppDbContext
         return Results.Conflict("Word already banned");
     db.BannedWords.Add(new BannedWord { Word = word, AddedBy = me?.Username ?? "?" });
     await db.SaveChangesAsync();
+    automod.InvalidateCache();
     return Results.Ok();
 });
 
-admin.MapDelete("/words/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db) =>
+admin.MapDelete("/words/{id:guid}", async (Guid id, HttpContext ctx, AppDbContext db, AutomodService automod) =>
 {
     if (!await IsMasterAsync(ctx, db)) return Results.Forbid();
     var w = await db.BannedWords.FindAsync(id);
     if (w == null) return Results.NotFound();
     db.BannedWords.Remove(w);
     await db.SaveChangesAsync();
+    automod.InvalidateCache();
     return Results.NoContent();
 });
 
