@@ -217,23 +217,28 @@ public class ServerClient
 
     // ── Hub send methods ──────────────────────────────────────────────────────
 
+    private Task HubInvokeAsync(string method, params object?[] args) =>
+        _hub?.State == Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Connected
+            ? _hub.InvokeCoreAsync(method, args)
+            : Task.CompletedTask;
+
     public Task SendMessageAsync(Guid convId, string text) =>
-        _hub!.InvokeAsync("SendMessage", convId, text);
+        HubInvokeAsync("SendMessage", convId, text);
 
     public Task SendTypingAsync(Guid convId) =>
-        _hub!.InvokeAsync("Typing", convId);
+        HubInvokeAsync("Typing", convId);
 
     public Task CallUserAsync(Guid targetId, string sdpOffer) =>
-        _hub!.InvokeAsync("CallUser", targetId, sdpOffer);
+        HubInvokeAsync("CallUser", targetId, sdpOffer);
 
     public Task CallAnswerAsync(Guid callerId, string sdpAnswer) =>
-        _hub!.InvokeAsync("CallAnswer", callerId, sdpAnswer);
+        HubInvokeAsync("CallAnswer", callerId, sdpAnswer);
 
     public Task SendIceCandidateAsync(Guid targetId, string candidate) =>
-        _hub!.InvokeAsync("IceCandidate", targetId, candidate);
+        HubInvokeAsync("IceCandidate", targetId, candidate);
 
     public Task HangUpAsync(Guid targetId) =>
-        _hub!.InvokeAsync("HangUp", targetId);
+        HubInvokeAsync("HangUp", targetId);
 
     // ── Auth ──────────────────────────────────────────────────────────────────
 

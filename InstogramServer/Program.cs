@@ -46,9 +46,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // ── EF Core + SQLite ──────────────────────────────────────────────────────────
-builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseSqlite(builder.Configuration.GetConnectionString("Default")
-        ?? "Data Source=instogram.db"));
+var connStr = builder.Configuration.GetConnectionString("Default") ?? "Data Source=instogram.db";
+builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite(connStr));
+builder.Services.AddDbContextFactory<AppDbContext>(o => o.UseSqlite(connStr));
 
 // ── SignalR ───────────────────────────────────────────────────────────────────
 builder.Services.AddSignalR();
@@ -58,7 +58,7 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<AutomodService>();
+builder.Services.AddSingleton<AutomodService>();
 
 var app = builder.Build();
 
@@ -70,10 +70,10 @@ using (var scope = app.Services.CreateScope())
     // Add columns added after initial schema — each wrapped individually so one
     // failure (column already exists) doesn't block the rest.
     // Use raw ADO.NET to run idempotent DDL without EF logging failures on every startup
-    var connStr = db.Database.GetConnectionString()!;
+    var dbConnStr = db.Database.GetConnectionString()!;
     void TryAlter(string sql)
     {
-        using var conn = new Microsoft.Data.Sqlite.SqliteConnection(connStr);
+        using var conn = new Microsoft.Data.Sqlite.SqliteConnection(dbConnStr);
         conn.Open();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
@@ -734,7 +734,7 @@ convs.MapPost("/dm", async (DmRequest req, HttpContext ctx, AppDbContext db) =>
     var me = TokenService.UserIdFromContext(ctx);
     // Find existing DM
     var existing = await db.Conversations
-        .Include(c => c.Members)
+        .Include(c => c.Members).ThenInclude(m => m.User)
         .Include(c => c.Messages)
         .FirstOrDefaultAsync(c =>
             !c.IsGroup &&

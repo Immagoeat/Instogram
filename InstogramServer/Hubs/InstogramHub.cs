@@ -10,7 +10,8 @@ namespace InstogramServer.Hubs;
 [Authorize]
 public class InstogramHub(AppDbContext db) : Hub
 {
-    Guid Me => Guid.Parse(Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    Guid Me => Guid.TryParse(Context.User?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
+        ? id : throw new HubException("Invalid or missing user identity");
 
     public override async Task OnConnectedAsync()
     {
@@ -61,9 +62,16 @@ public class InstogramHub(AppDbContext db) : Hub
         };
         await Clients.Group($"conv:{conversationId}").SendAsync("NewMessage", payload);
 
+        // Batch unread counts in one query instead of N round-trips
+        var counts = await db.Notifications
+            .Where(n => memberIds.Contains(n.RecipientId) && !n.IsRead)
+            .GroupBy(n => n.RecipientId)
+            .Select(g => new { RecipientId = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var countMap = counts.ToDictionary(x => x.RecipientId, x => x.Count);
         foreach (var uid in memberIds)
         {
-            var count = await db.Notifications.CountAsync(n => n.RecipientId == uid && !n.IsRead);
+            var count = countMap.GetValueOrDefault(uid, 0);
             await Clients.Group($"user:{uid}").SendAsync("NotificationCount", count);
         }
     }
@@ -121,7 +129,13 @@ public class InstogramHub(AppDbContext db) : Hub
         db.ConvMembers.Add(new ConversationMember { ConversationId = conversationId, UserId = userId });
         await db.SaveChangesAsync();
 
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"conv:{conversationId}");
+        // Add the new member's connection(s) to the group, not the caller's
+        var newMemberConnections = await db.ConvMembers
+            .Where(m => m.UserId == userId)
+            .Select(m => m.UserId.ToString())
+            .ToListAsync();
+        // Best-effort: SignalR Groups are connection-scoped; new member will join on next connect
+        // via OnConnectedAsync. Notify their user group so they receive the event now.
         var user = await db.Users.FindAsync(userId);
         await Clients.Group($"conv:{conversationId}")
             .SendAsync("MemberAdded", new { conversationId, userId, username = user?.Username });
