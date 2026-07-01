@@ -208,16 +208,33 @@ public partial class AdminViewModel : ViewModelBase
             LoadFlagsAsync(), LoadWordsAsync(),
             LoadUsersAsync(), LoadPostsAsync(), LoadReportsAsync());
 
-        // If everything failed with a permission error, show the claim button
         bool allFailed = FlagsStatus.StartsWith("Error") && WordsStatus.StartsWith("Error")
                       && UsersStatus.StartsWith("Error");
-        ShowClaimButton = allFailed;
+
+        if (!allFailed) { ShowClaimButton = false; ClaimStatus = ""; return; }
+
+        if (FlagsStatus.Contains("404"))
+        {
+            // Server is running an old build that doesn't have the admin routes yet
+            ShowClaimButton = false;
+            ClaimStatus = "";
+            FlagsStatus  = "Server needs to be restarted with the latest build (404 — routes not found).";
+            WordsStatus  = FlagsStatus;
+            UsersStatus  = FlagsStatus;
+            PostsStatus  = FlagsStatus;
+            ReportsStatus = FlagsStatus;
+        }
+        else if (FlagsStatus.Contains("403"))
+        {
+            // Authenticated but not master — offer the claim button
+            ShowClaimButton = true;
+        }
     }
 
     [RelayCommand]
     async Task ClaimMaster()
     {
-        ClaimStatus = "Claiming master status…";
+        ClaimStatus = "Claiming…";
         var error = await ServerClient.Instance.ClaimMasterAsync();
         if (error == null)
         {
@@ -225,6 +242,15 @@ public partial class AdminViewModel : ViewModelBase
             ClaimStatus = "You are now master. Reloading…";
             ShowClaimButton = false;
             await LoadAllAsync();
+        }
+        else if (error.StartsWith("400"))
+        {
+            ClaimStatus = "A master already exists — ask them to promote you.";
+        }
+        else if (error.StartsWith("404"))
+        {
+            ClaimStatus = "Server is outdated — restart it with the latest build first.";
+            ShowClaimButton = false;
         }
         else
         {

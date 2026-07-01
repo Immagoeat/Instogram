@@ -528,9 +528,9 @@ public class ServerClient
     {
         var resp = await _http.PostAsync("admin/claim", null);
         if (resp.IsSuccessStatusCode) return null;
+        // Return status + body so caller can distinguish 400 vs 404 vs 403
         var body = await resp.Content.ReadAsStringAsync();
-        try { return System.Text.Json.JsonSerializer.Deserialize<string>(body, JsonOpts) ?? body; }
-        catch { return body; }
+        return $"{(int)resp.StatusCode}: {body}";
     }
 
     public async Task<bool> PromoteUserAsync(Guid userId)
