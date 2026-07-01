@@ -69,7 +69,16 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
     // Add columns added after initial schema — each wrapped individually so one
     // failure (column already exists) doesn't block the rest.
-    void TryAlter(string sql) { try { db.Database.ExecuteSqlRaw(sql); } catch { } }
+    // Use raw ADO.NET to run idempotent DDL without EF logging failures on every startup
+    var connStr = db.Database.GetConnectionString()!;
+    void TryAlter(string sql)
+    {
+        using var conn = new Microsoft.Data.Sqlite.SqliteConnection(connStr);
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+        try { cmd.ExecuteNonQuery(); } catch { }
+    }
 
     // New columns added after initial schema (idempotent — each wrapped individually)
     TryAlter("ALTER TABLE Posts   ADD COLUMN VideoUrl      TEXT    NOT NULL DEFAULT ''");
