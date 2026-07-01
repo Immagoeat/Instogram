@@ -19,7 +19,7 @@ if [ -f "$ENV_FILE" ]; then
     set -a; source "$ENV_FILE"; set +a
 fi
 
-PORT="${PORT:-5001}"
+PORT="${PORT:-5000}"
 
 # Generate and persist JWT key once so tokens survive restarts
 if [ -z "$JWT_KEY" ]; then
