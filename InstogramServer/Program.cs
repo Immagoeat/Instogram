@@ -160,6 +160,8 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/ping", () => Results.Ok(new { version = "2026-07-01", routes = new[] { "admin/flags", "admin/words", "admin/users", "admin/posts", "admin/reports", "admin/claim" } }));
+
 // ── Shared directories (declared early so all route groups can use them) ──────
 var imageDir = app.Configuration["ImageDir"]
     ?? Path.Combine(AppContext.BaseDirectory, "images");

@@ -256,6 +256,16 @@ public class ServerClient
         return (body?.User, body?.Token ?? "");
     }
 
+    public async Task<string> PingAsync()
+    {
+        try
+        {
+            var resp = await _http.GetFromJsonAsync<System.Text.Json.JsonElement>("ping", JsonOpts);
+            return resp.GetProperty("version").GetString() ?? "unknown";
+        }
+        catch { return "unreachable"; }
+    }
+
     // ── Users ─────────────────────────────────────────────────────────────────
 
     public Task<UserDto?> GetMeAsync() =>

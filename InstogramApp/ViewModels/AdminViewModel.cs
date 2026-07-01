@@ -195,6 +195,7 @@ public partial class AdminViewModel : ViewModelBase
     // ── Claim master (shown when server returns 403) ───────────────────────────
     [ObservableProperty] private string _claimStatus = "";
     [ObservableProperty] private bool   _showClaimButton;
+    [ObservableProperty] private string _serverVersion = "";
 
     public AdminViewModel(MainWindowViewModel main)
     {
@@ -204,6 +205,9 @@ public partial class AdminViewModel : ViewModelBase
 
     private async Task LoadAllAsync()
     {
+        // Ping first so we can show which server build is running
+        ServerVersion = $"server {await ServerClient.Instance.PingAsync()}";
+
         await Task.WhenAll(
             LoadFlagsAsync(), LoadWordsAsync(),
             LoadUsersAsync(), LoadPostsAsync(), LoadReportsAsync());
@@ -215,18 +219,13 @@ public partial class AdminViewModel : ViewModelBase
 
         if (FlagsStatus.Contains("404"))
         {
-            // Server is running an old build that doesn't have the admin routes yet
             ShowClaimButton = false;
             ClaimStatus = "";
-            FlagsStatus  = "Server needs to be restarted with the latest build (404 — routes not found).";
-            WordsStatus  = FlagsStatus;
-            UsersStatus  = FlagsStatus;
-            PostsStatus  = FlagsStatus;
-            ReportsStatus = FlagsStatus;
+            var msg = $"Server returned 404 — admin routes missing. Server version: {ServerVersion}. Make sure the server is running the latest build.";
+            FlagsStatus = WordsStatus = UsersStatus = PostsStatus = ReportsStatus = msg;
         }
         else if (FlagsStatus.Contains("403"))
         {
-            // Authenticated but not master — offer the claim button
             ShowClaimButton = true;
         }
     }

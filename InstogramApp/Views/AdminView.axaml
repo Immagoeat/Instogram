@@ -21,8 +21,10 @@
         <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="2">
           <TextBlock Text="Admin Panel" Foreground="{DynamicResource AppTextBrush}"
                      FontSize="22" FontWeight="Bold" LetterSpacing="0.2"/>
-          <TextBlock Text="Automod · Banned words · User management · Posts · Reports"
-                     Foreground="{DynamicResource AppSubtextBrush}" FontSize="12"/>
+          <TextBlock Foreground="{DynamicResource AppSubtextBrush}" FontSize="12">
+            <Run Text="Automod · Banned words · User management · Posts · Reports  "/>
+            <Run Text="{Binding ServerVersion}" Foreground="#555"/>
+          </TextBlock>
         </StackPanel>
         <Border Grid.Column="2" Width="36" Height="36" CornerRadius="10" Background="#1a120a">
           <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
