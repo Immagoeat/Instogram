@@ -253,12 +253,17 @@ public class ServerClient
         return (body?.User, body?.Token ?? "");
     }
 
-    public async Task<(UserDto? user, string token)> LoginAsync(string username, string password)
+    public async Task<(UserDto? user, string token, string error)> LoginAsync(string username, string password)
     {
         var resp = await _http.PostAsJsonAsync("auth/login", new { username, password });
-        if (!resp.IsSuccessStatusCode) return (null, "");
-        var body = await resp.Content.ReadFromJsonAsync<AuthResponse>(JsonOpts);
-        return (body?.User, body?.Token ?? "");
+        if (!resp.IsSuccessStatusCode)
+        {
+            var body = await resp.Content.ReadAsStringAsync();
+            var msg  = body.Trim().Trim('"');
+            return (null, "", string.IsNullOrWhiteSpace(msg) ? "Invalid username or password." : msg);
+        }
+        var auth = await resp.Content.ReadFromJsonAsync<AuthResponse>(JsonOpts);
+        return (auth?.User, auth?.Token ?? "", "");
     }
 
     public async Task<string> PingAsync()

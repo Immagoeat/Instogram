@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -32,9 +33,10 @@ public class NotificationRowViewModel : ViewModelBase
     }
 }
 
-public partial class NotificationsViewModel : ViewModelBase
+public partial class NotificationsViewModel : ViewModelBase, IDisposable
 {
     private readonly MainWindowViewModel _main;
+    private bool _hasUnread;
 
     public ObservableCollection<NotificationRowViewModel> Items { get; } = new();
     [ObservableProperty] private bool   _hasNotifications;
@@ -53,18 +55,27 @@ public partial class NotificationsViewModel : ViewModelBase
         try
         {
             var list = await ServerClient.Instance.GetNotificationsAsync();
-            await ServerClient.Instance.MarkAllNotificationsReadAsync();
 
             Items.Clear();
+            _hasUnread = false;
             if (list != null)
                 foreach (var n in list)
+                {
                     Items.Add(new NotificationRowViewModel(n));
+                    if (!n.IsRead) _hasUnread = true;
+                }
 
             HasNotifications = Items.Count > 0;
-
-            _main.ClearNotificationBadge();
         }
         catch { }
         finally { IsLoading = false; }
+    }
+
+    // Called when the user navigates away — mark read only after they've seen the list
+    public void Dispose()
+    {
+        if (!_hasUnread) return;
+        _ = ServerClient.Instance.MarkAllNotificationsReadAsync();
+        _main.ClearNotificationBadge();
     }
 }

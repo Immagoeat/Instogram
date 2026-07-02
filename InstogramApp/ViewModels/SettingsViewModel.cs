@@ -61,6 +61,11 @@ public partial class SettingsViewModel : ViewModelBase
 
             PortAudio.Terminate();
 
+            var saved = DeviceConfig.Load();
+            AppState.Instance.MicDeviceIndex     = saved.MicDeviceIndex;
+            AppState.Instance.SpeakerDeviceIndex = saved.SpeakerDeviceIndex;
+            AppState.Instance.CameraDevicePath   = saved.CameraDevicePath;
+
             SelectedMic     = FindAudio(MicDevices,     AppState.Instance.MicDeviceIndex)     ?? MicDevices[0];
             SelectedSpeaker = FindAudio(SpeakerDevices, AppState.Instance.SpeakerDeviceIndex) ?? SpeakerDevices[0];
         }
@@ -84,6 +89,8 @@ public partial class SettingsViewModel : ViewModelBase
                     CameraDevices.Add(new CameraDeviceViewModel { Path = c.Path, Name = c.Name });
 
             SelectedCamera = FindCamera(AppState.Instance.CameraDevicePath) ?? CameraDevices[0];
+            // Sync back in case camera path was loaded from disk
+            AppState.Instance.CameraDevicePath = SelectedCamera?.Path ?? "";
         }
         catch
         {
@@ -110,6 +117,10 @@ public partial class SettingsViewModel : ViewModelBase
         AppState.Instance.MicDeviceIndex     = SelectedMic?.DeviceIndex     ?? -1;
         AppState.Instance.SpeakerDeviceIndex = SelectedSpeaker?.DeviceIndex ?? -1;
         AppState.Instance.CameraDevicePath   = SelectedCamera?.Path         ?? "";
+        DeviceConfig.Save(new DeviceSettings(
+            AppState.Instance.MicDeviceIndex,
+            AppState.Instance.SpeakerDeviceIndex,
+            AppState.Instance.CameraDevicePath));
         StatusText = "Saved.";
     }
 

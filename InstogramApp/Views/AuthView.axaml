@@ -116,7 +116,8 @@
                                  VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Text="{Binding CaptchaQuestion}" Foreground="#e2d9f3"
-                               FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                               FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"
+                               LineHeight="22"/>
                   </StackPanel>
                 </Border>
                 <StackPanel Spacing="4">
